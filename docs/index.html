@@ -173,6 +173,23 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .basis{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:6px;background:#fff;border:1px solid var(--line);margin-left:6px;vertical-align:middle}
 .flist{margin:0;padding-left:18px;font-size:13px;display:flex;flex-direction:column;gap:4px}
 .fnote{font-size:11.5px;color:var(--muted)}
+.pill.PL{background:#EEF6FF;color:#1D3F8F;border:1px solid #B9D3F5}
+.pnl{border:1px solid var(--ink);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.pnl .fh{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.pnl .aud{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:#EAFBEF;color:#126B2B;border:1px solid #9EE5B2}
+.pnl .aud.warn{background:#FBFCE6;color:var(--ink);border-color:var(--yellow)}
+.pnl .tw{overflow-x:auto}
+.pnl table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.pnl th,.pnl td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.pnl th:first-child,.pnl td:first-child{text-align:left;white-space:normal}
+.pnl thead th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.pnl tr.key td{font-weight:800}
+.pnl td .lbl{display:block;font-size:11px;color:var(--soft);font-weight:500}
+.pnl td.neg{color:var(--red)}
+.pnl td.up{color:#126B2B;font-weight:700} .pnl td.down{color:var(--red);font-weight:700}
+.pnl details summary{cursor:pointer;font-size:12px;font-weight:700}
+.pnl details ul{margin:8px 0 0;padding-left:18px;font-size:11.5px;color:var(--muted)}
+.pnl .empty{color:var(--muted);font-size:13px;margin:0}
 .goalcard .chal{font-size:13.5px;color:var(--yellow);font-weight:700;line-height:1.45}
 .assets{border:2px dashed var(--line);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:12px}
 .assets .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -440,6 +457,66 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     return h;
   }
 
+
+  // ---------- audited P&L (franchise FDDs only) ----------
+  function pnl(r) { if (!r.pnl_json) return null; try { return JSON.parse(r.pnl_json); } catch (e) { return null; } }
+  const hasPnl = r => { const p = pnl(r); return !!(p && p.status === "ok"); };
+  const isFdd = r => r.quote_type === "fdd_filing" || /FDD/.test(r.publication || "");
+  function usd(v) {
+    if (v === null || v === undefined) return "–";
+    const a = Math.abs(v), sgn = v < 0;
+    const t = a >= 1e9 ? "$" + (a / 1e9).toFixed(2) + "B" : a >= 1e6 ? "$" + (a / 1e6).toFixed(1) + "M" : a >= 1e3 ? "$" + Math.round(a / 1e3) + "K" : "$" + Math.round(a);
+    return sgn ? "(" + t + ")" : t;
+  }
+  const PNL_LABEL = { revenue: "Total revenue", royalties: "Royalty revenue", franchise_fees: "Franchise / development fees", cost_of_revenue: "Cost of revenue", gross_profit: "Gross profit", operating_expenses: "Operating expenses", operating_income: "Operating income", net_income: "Net income" };
+  function pnlLine(r) {
+    const p = pnl(r); if (!p || p.status !== "ok") return "";
+    const rev = (p.lines.find(l => l.key === "revenue") || {}).values || [];
+    const bits = [];
+    if (rev[0] != null) bits.push("Audited revenue " + usd(rev[0]) + " (FY" + p.years[0] + ")");
+    if (p.derived.revenue_growth_pct != null) bits.push((p.derived.revenue_growth_pct >= 0 ? "+" : "") + p.derived.revenue_growth_pct + "% YoY");
+    if (p.derived.net_margin_pct != null) bits.push(p.derived.net_margin_pct + "% net margin");
+    return bits.join(" · ") + (p.entity_type === "parent_or_guarantor" || /subsidiaries|consolidated/i.test(p.entity || "") ? " (parent group)" : "");
+  }
+  function pnlBlock(r) {
+    const p = pnl(r);
+    const head = (badge) => '<div class="pnl"><div class="fh"><p class="label">Profit &amp; loss · from the audited FDD statements</p>' + (badge || "") + "</div>";
+    if (!isFdd(r)) return '<div class="pnl"><div class="fh"><p class="label">Profit &amp; loss</p></div><p class="empty">No public P&amp;L. ' + esc(r.company) + ' is a private company and does not publish financial statements, so only the sourced figures above are shown. Audited P&amp;Ls are available for franchise (FDD) signals.</p></div>';
+    if (!p) return head() + '<p class="empty">Not read yet. The agent reads the audited income statement from this FDD on its next run (weekdays 7:45 AM ET, or a full scan from this site).</p></div>';
+    if (p.status !== "ok") return head('<span class="aud warn">' + (p.status === "no_pnl_yet" ? "No P&amp;L yet" : "Open the PDF") + "</span>") + '<p class="empty">' + esc(p.note || "No income statement could be read automatically.") + " " + srcLink(p.source_url || r.source_url, "Open the FDD") + "</p></div>";
+    // Consolidated group statements are never shown as the franchisor's own.
+    if (/subsidiaries|consolidated/i.test(p.entity || "") && p.entity_type !== "parent_or_guarantor") { p.entity_type = "parent_or_guarantor"; p.note = "These are the consolidated results of " + p.entity + ", the group that owns the franchisor, not the franchisor alone."; }
+    const badge = '<span class="aud' + (p.audited ? "" : " warn") + '">' + (p.audited ? "Audited" + (p.auditor ? " · " + esc(p.auditor) : "") : "Not stated as audited") + "</span>";
+    const ys = p.years;
+    let h = head(badge);
+    h += '<p class="fnote" style="margin:0"><b>' + esc(p.entity || r.company) + "</b>" + (p.entity_type === "parent_or_guarantor" ? " · parent group's consolidated results" : " · the franchisor's own statements") + (p.fiscal_year_end ? " · fiscal years ending " + esc(p.fiscal_year_end) : "") + "</p>";
+    const d = p.derived || {};
+    const tile = (k, v, sub) => v === null || v === undefined ? "" : '<div class="ftile"><p class="label">' + k + '</p><p class="big">' + v + "</p>" + (sub ? '<p class="sub">' + sub + "</p>" : "") + "</div>";
+    const rev = (p.lines.find(l => l.key === "revenue") || {}).values || [];
+    const tiles = [
+      tile("Revenue FY" + esc(ys[0]), rev[0] != null ? usd(rev[0]) : null, d.revenue_growth_pct != null ? (d.revenue_growth_pct >= 0 ? "+" : "") + d.revenue_growth_pct + "% vs FY" + esc(ys[1]) : ""),
+      tile("Net margin", d.net_margin_pct != null ? d.net_margin_pct + "%" : null, "Net income ÷ revenue"),
+      tile("Operating margin", d.operating_margin_pct != null ? d.operating_margin_pct + "%" : null, "Operating income ÷ revenue"),
+      tile("Gross margin", d.gross_margin_pct != null ? d.gross_margin_pct + "%" : null, ""),
+      tile("Royalties", d.royalty_share_pct != null ? d.royalty_share_pct + "%" : null, "of total revenue")
+    ].filter(Boolean).slice(0, 3);
+    if (tiles.length) h += '<div class="fgrid">' + tiles.join("") + "</div>";
+    h += '<div class="tw"><table><thead><tr><th scope="col">Line</th>' + ys.map(y => '<th scope="col">FY' + esc(y) + "</th>").join("") + (ys.length > 1 ? '<th scope="col">YoY</th>' : "") + "</tr></thead><tbody>";
+    for (const l of p.lines) {
+      const v0 = l.values[0], v1 = l.values[1];
+      // No % change across a loss or from zero: it would mislead.
+      const yoy = ys.length > 1 && v0 != null && v1 > 0 && v0 >= 0 ? Math.round((v0 / v1 - 1) * 1000) / 10 : null;
+      const goodUp = !/expenses|cost/.test(l.key);
+      const cls = yoy === null ? "" : (yoy >= 0) === goodUp ? "up" : "down";
+      const std = PNL_LABEL[l.key] || l.label;
+      h += '<tr class="' + (/revenue|net_income/.test(l.key) && l.key !== "cost_of_revenue" ? "key" : "") + '"><td>' + esc(std) + (l.label && l.label.toLowerCase() !== std.toLowerCase() ? '<span class="lbl">“' + esc(l.label) + "” in the FDD</span>" : "") + "</td>" + l.values.map(v => '<td class="' + (v < 0 ? "neg" : "") + '">' + usd(v) + "</td>").join("") + (ys.length > 1 ? '<td class="' + cls + '">' + (yoy === null ? "–" : (yoy >= 0 ? "+" : "") + yoy + "%") + "</td>" : "") + "</tr>";
+    }
+    h += "</tbody></table></div>";
+    if (p.note) h += '<p class="fnote" style="margin:0">' + esc(p.note) + "</p>";
+    h += '<details><summary>Show the rows from the FDD (' + p.checks.kept + " figures matched)</summary><ul>" + p.lines.map(l => "<li>“" + esc(l.quote) + "”</li>").join("") + "</ul></details>";
+    h += '<p class="fnote" style="margin:0">Every figure was matched to its row in the FDD PDF (right year, right sign). Figures that could not be matched are left out. ' + srcLink(p.source_url || r.source_url, "Open the FDD (Item 21)") + "</p></div>";
+    return h;
+  }
   // ---------- render ----------
   // ---------- stacking: one company, several different signals ----------
   function coKey(r) {
@@ -469,7 +546,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     const q = state.q.trim().toLowerCase();
     return state.rows.filter(r =>
       specialOk(r) &&
-      (state.filter === "All" || (state.filter === "Hot" ? isHot(r) : state.filter === "Contacted" ? r.review_action === "contacted" : r.status === state.filter)) &&
+      (state.filter === "All" || (state.filter === "Hot" ? isHot(r) : state.filter === "PL" ? hasPnl(r) : state.filter === "Contacted" ? r.review_action === "contacted" : r.status === state.filter)) &&
       (state.gtype === "All" || goalLabel(r.goal_type) === state.gtype) &&
       bandOk(r) &&
       (!q || [r.company, r.ceo_name, r.speaker_name, r.goal_phrase, r.publication, r.company_domain, r.exact_quote].join(" ").toLowerCase().includes(q)));
@@ -485,9 +562,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     document.querySelectorAll("[data-kpi]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.kpi === cur)));
   }
   function renderChips() {
-    $("chips").innerHTML = ["All", "Hot", "Qualified", "Review", "Contacted", "Rejected"].map(o => {
-      const n = o === "All" ? state.rows.length : o === "Hot" ? state.rows.filter(isHot).length : o === "Contacted" ? state.rows.filter(r => r.review_action === "contacted").length : state.rows.filter(r => r.status === o).length;
-      return '<button type="button" class="chip" data-f="' + o + '" aria-pressed="' + (state.filter === o) + '">' + (o === "Hot" ? "Hot list" : o) + '<span class="c">' + n + "</span></button>";
+    $("chips").innerHTML = ["All", "Hot", "Qualified", "Review", "Contacted", "Rejected", "PL"].map(o => {
+      const n = o === "All" ? state.rows.length : o === "Hot" ? state.rows.filter(isHot).length : o === "PL" ? state.rows.filter(hasPnl).length : o === "Contacted" ? state.rows.filter(r => r.review_action === "contacted").length : state.rows.filter(r => r.status === o).length;
+      return '<button type="button" class="chip" data-f="' + o + '" aria-pressed="' + (state.filter === o) + '">' + (o === "Hot" ? "Hot list" : o === "PL" ? "Audited P&amp;L" : o) + '<span class="c">' + n + "</span></button>";
     }).join("");
     const types = ["All"].concat(Object.values(GOALS).filter(g => state.rows.some(r => goalLabel(r.goal_type) === g)));
     if (!types.includes(state.gtype)) state.gtype = "All";
@@ -505,7 +582,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     if (!rows.some(r => String(r.id) === String(state.sel))) state.sel = rows[0].id;
     $("list").innerHTML = rows.map(r => {
       const s = Number(r.score) || 0;
-      return '<button type="button" class="item" data-id="' + esc(r.id) + '" aria-current="' + (String(r.id) === String(state.sel)) + '"><div style="min-width:0"><p class="co">' + esc(r.company) + '</p><p class="goal">' + esc(r.goal_phrase) + '</p><p class="meta">' + (r.revenue_label ? "<b>" + esc(r.revenue_label.replace(/, (reported|company-stated|estimate)$/, "")) + "</b> · " : "") + esc(goalLabel(r.goal_type)) + (r.publication ? " · " + esc(r.publication) : "") + (r.published_date ? " · " + esc(fmtDate(r.published_date)) : "") + '</p></div><div class="right"><span class="pill ' + esc(r.status) + '">' + esc(r.status) + "</span>" + (others(r).length ? '<span class="pill Stack">' + (others(r).length + 1) + " signals</span>" : "") + (r.review_action === "contacted" ? '<span class="pill Contacted">Contacted</span>' : "") + meter(s) + "</div></button>";
+      return '<button type="button" class="item" data-id="' + esc(r.id) + '" aria-current="' + (String(r.id) === String(state.sel)) + '"><div style="min-width:0"><p class="co">' + esc(r.company) + '</p><p class="goal">' + esc(r.goal_phrase) + '</p><p class="meta">' + (r.revenue_label ? "<b>" + esc(r.revenue_label.replace(/, (reported|company-stated|estimate)$/, "")) + "</b> · " : "") + esc(goalLabel(r.goal_type)) + (r.publication ? " · " + esc(r.publication) : "") + (r.published_date ? " · " + esc(fmtDate(r.published_date)) : "") + '</p></div><div class="right"><span class="pill ' + esc(r.status) + '">' + esc(r.status) + "</span>" + (others(r).length ? '<span class="pill Stack">' + (others(r).length + 1) + " signals</span>" : "") + (r.review_action === "contacted" ? '<span class="pill Contacted">Contacted</span>' : "") + (hasPnl(r) ? '<span class="pill PL">Audited P&amp;L</span>' : "") + meter(s) + "</div></button>";
     }).join("");
   }
   function fact(k, v, html) { return v ? '<div class="fact"><p class="label">' + k + '</p><p class="v">' + (html ? v : esc(v)) + "</p></div>" : ""; }
@@ -552,6 +629,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       (cm && cm.incentive ? "<span>Incentive<b>" + esc(cm.incentive) + "</b></span>" : "") +
       "</div>" + (r.challenge_line ? '<p class="chal">' + esc(r.challenge_line) + "</p>" : (r.math_line ? '<p class="math">' + esc(r.math_line) + "</p>" : "")) + "</div>";
     h += finBlock(r);
+    h += pnlBlock(r);
 
     if (r.exact_quote) {
       const qlabel = r.quote_type === "direct_quote" ? "Direct quote" : r.quote_type === "fdd_filing" ? "Franchise Disclosure Document" : r.quote_type === "sec_filing" ? "SEC filing" : "As reported by " + (r.publication || "the article");
@@ -634,7 +712,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     const fmt = x => x.toLocaleDateString([], { month: "short", day: "numeric" });
     $("digest").innerHTML = '<div class="dg" role="dialog" aria-label="Weekly digest"><div><p class="label">CEO Coaching International · Signal agent · weekly digest</p><h2>' + fmt(from) + " – " + fmt(d) + ", " + d.getFullYear() + "</h2></div>" +
       '<div class="dk"><div><b>' + f.found + "</b>signals found</div><div><b>" + f.verified + "</b>passed fact checks</div><div><b>" + f.q + '</b>qualified</div><div><b>' + f.rv + "</b>for human review</div></div>" +
-      '<p class="label">Top leads this week</p>' + (leads.length ? leads.map(r => '<div class="lead"><span class="t">' + esc(r.company) + ' <span class="pill ' + esc(r.status) + '">' + esc(r.status) + "</span>" + (others(r).length ? ' <span class="pill Stack">' + (others(r).length + 1) + " signals</span>" : "") + '</span><span class="s">' + esc(goalLabel(r.goal_type)) + (r.ceo_name ? " · " + esc(r.ceo_name) + (r.ceo_title ? ", " + esc(r.ceo_title) : "") : "") + (r.revenue_label ? " · " + esc(r.revenue_label) : "") + '</span><span class="c">' + esc(r.challenge_line || r.goal_phrase || "") + '</span><span class="s">Source: ' + esc(r.publication || hostName(r.source_url)) + "</span></div>").join("") : '<p class="fnote">No new leads this week.</p>') +
+      '<p class="label">Top leads this week</p>' + (leads.length ? leads.map(r => '<div class="lead"><span class="t">' + esc(r.company) + ' <span class="pill ' + esc(r.status) + '">' + esc(r.status) + "</span>" + (others(r).length ? ' <span class="pill Stack">' + (others(r).length + 1) + " signals</span>" : "") + '</span><span class="s">' + esc(goalLabel(r.goal_type)) + (r.ceo_name ? " · " + esc(r.ceo_name) + (r.ceo_title ? ", " + esc(r.ceo_title) : "") : "") + (r.revenue_label ? " · " + esc(r.revenue_label) : "") + '</span>' + (pnlLine(r) ? '<span class="s"><b>' + esc(pnlLine(r)) + "</b></span>" : "") + '<span class="c">' + esc(r.challenge_line || r.goal_phrase || "") + '</span><span class="s">Source: ' + esc(r.publication || hostName(r.source_url)) + "</span></div>").join("") : '<p class="fnote">No new leads this week.</p>') +
       '<p class="fnote">Every figure above links to its source on the agent site. Rejected this week: ' + f.dup + " duplicates, " + f.fact + " failed fact checks, " + f.icp + " outside the ICP.</p>" +
       '<div class="acts"><button type="button" class="btn ghostdl" data-digest="print">Print / save as PDF</button><button type="button" class="btn dl" data-digest="close">Close</button></div></div>';
     $("digest").hidden = false;
@@ -767,11 +845,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   window.__ceoci = { buildDeck: buildDeck, rows: () => state.rows };
 
   // ---------- CSV ----------
-  const COLS = [["found_on","Found on"],["status","Status"],["score","Score"],["reasons","Reasons"],["company","Company"],["company_domain","Domain"],["hq_country","HQ country"],["employees","Employees"],["ownership","Ownership"],["ceo_name","CEO name"],["ceo_title","CEO title"],["ceo_linkedin","CEO LinkedIn"],["speaker_name","Speaker"],["speaker_title","Speaker title"],["goal_type","Goal type"],["goal_phrase","Goal"],["exact_quote","Exact quote"],["quote_type","Quote type"],["baseline","Baseline"],["target","Target"],["unit","Unit"],["deadline","Deadline"],["math_line","Pace line"],["challenge_line","Challenge line"],["revenue_label","Revenue (sourced)"],["source_url","Article URL"],["publication","Publication"],["published_date","Published"],["source_age_days","Source age (days)"],["email_subject","Email subject"],["email_body","Email body"],["linkedin_note","LinkedIn note"],["linkedin_dm","LinkedIn DM"],["enrichment_sources","Enrichment sources"]];
+  const COLS = [["found_on","Found on"],["status","Status"],["score","Score"],["reasons","Reasons"],["company","Company"],["company_domain","Domain"],["hq_country","HQ country"],["employees","Employees"],["ownership","Ownership"],["ceo_name","CEO name"],["ceo_title","CEO title"],["ceo_linkedin","CEO LinkedIn"],["speaker_name","Speaker"],["speaker_title","Speaker title"],["goal_type","Goal type"],["goal_phrase","Goal"],["exact_quote","Exact quote"],["quote_type","Quote type"],["baseline","Baseline"],["target","Target"],["unit","Unit"],["deadline","Deadline"],["math_line","Pace line"],["challenge_line","Challenge line"],["revenue_label","Revenue (sourced)"],["pnl_summary","Audited P&L (FDD)"],["source_url","Article URL"],["publication","Publication"],["published_date","Published"],["source_age_days","Source age (days)"],["email_subject","Email subject"],["email_body","Email body"],["linkedin_note","LinkedIn note"],["linkedin_dm","LinkedIn DM"],["enrichment_sources","Enrichment sources"]];
   function csvCell(v) { let s = v == null ? "" : String(v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
   function downloadCsv(rows, label) {
     if (!rows.length) { notice("warn", "<b>Nothing to download.</b> This view has no signals."); return; }
-    const lines = [COLS.map(c => c[1]).join(",")].concat(rows.map(r => COLS.map(c => csvCell(c[0] === "goal_type" ? goalLabel(r[c[0]]) : r[c[0]])).join(",")));
+    const lines = [COLS.map(c => c[1]).join(",")].concat(rows.map(r => COLS.map(c => csvCell(c[0] === "goal_type" ? goalLabel(r[c[0]]) : c[0] === "pnl_summary" ? pnlLine(r) : r[c[0]])).join(",")));
     const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
