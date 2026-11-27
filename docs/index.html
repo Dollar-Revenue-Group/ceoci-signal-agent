@@ -71,9 +71,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .kpi{border-radius:var(--r);padding:14px 16px;background:var(--mist);display:flex;flex-direction:column;gap:6px;min-width:0}
 .kpi .n{font-size:30px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
 .kpi .k{font-size:12px;font-weight:600;color:var(--muted)}
+.kpi{border:2px solid transparent;text-align:left;font:inherit;color:inherit;cursor:pointer;transition:border-color .15s,transform .15s}
+.kpi:hover{border-color:var(--ink);transform:translateY(-1px)}
+.kpi[aria-pressed="true"]{border-color:var(--green);box-shadow:0 0 0 2px var(--green) inset}
+.kpi .go{font-size:11px;font-weight:700;color:var(--muted);margin-top:auto}
+.kpi.q .go{color:#CFCFCA}
+.viewing{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 16px;background:#FBFCE6;border-bottom:1px solid var(--line);font-size:12.5px}
+.viewing button{border:1px solid var(--ink);background:#fff;border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700}
 .kpi.q{background:var(--ink);color:#fff} .kpi.q .n{color:var(--green)} .kpi.q .k{color:#CFCFCA}
 
-.main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:20px;margin-top:20px;align-items:start}
+.main{scroll-margin-top:96px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:20px;margin-top:20px;align-items:start}
 .panel{border:1px solid var(--line);border-radius:var(--r);min-width:0}
 .tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
 .chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:600;color:var(--ink)}
@@ -252,12 +259,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   <div id="failalert"></div>
 
   <section class="kpis" aria-label="Summary">
-    <div class="kpi q"><span class="n" id="k-q">0</span><span class="k">Qualified, ready for outreach</span></div>
-    <div class="kpi"><span class="n" id="k-r">0</span><span class="k">Need a human check</span></div>
-    <div class="kpi"><span class="n" id="k-x">0</span><span class="k">Rejected by the agent</span></div>
-    <div class="kpi"><span class="n" id="k-all">0</span><span class="k">Signals found</span></div>
-    <div class="kpi"><span class="n" id="k-band">0</span><span class="k">Revenue sourced at $10M–$200M</span></div>
-    <div class="kpi"><span class="n" id="k-new">0</span><span class="k">Found in the last 7 days</span></div>
+    <button type="button" data-kpi="q" title="Show Qualified signals" aria-pressed="false" class="kpi q"><span class="n" id="k-q">0</span><span class="k">Qualified, ready for outreach</span></button>
+    <button type="button" data-kpi="r" title="Show signals that need a human check" aria-pressed="false" class="kpi"><span class="n" id="k-r">0</span><span class="k">Need a human check</span></button>
+    <button type="button" data-kpi="x" title="Show rejected signals" aria-pressed="false" class="kpi"><span class="n" id="k-x">0</span><span class="k">Rejected by the agent</span></button>
+    <button type="button" data-kpi="all" title="Show all signals" aria-pressed="false" class="kpi"><span class="n" id="k-all">0</span><span class="k">Signals found</span></button>
+    <button type="button" data-kpi="band" title="Show live signals with sourced revenue of $10M–$200M" aria-pressed="false" class="kpi"><span class="n" id="k-band">0</span><span class="k">Revenue sourced at $10M–$200M</span></button>
+    <button type="button" data-kpi="new" title="Show live signals found in the last 7 days" aria-pressed="false" class="kpi"><span class="n" id="k-new">0</span><span class="k">Found in the last 7 days</span></button>
   </section>
   <section class="funnelwrap" id="funnel" aria-label="How the agent decides"></section>
 
@@ -271,6 +278,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
         <button type="button" class="btn dl" id="csvAll">Download all as CSV</button>
         <button type="button" class="btn dl ghostdl" id="csvView">CSV of this view</button>
       </div>
+      <div class="viewing" id="viewing" hidden></div>
       <div class="list" id="list"></div>
     </div>
     <div class="panel" id="detail"></div>
@@ -313,7 +321,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 (function(){
   const API = "https://n8n-bkfvq-u78038.vm.elestio.app/webhook/ceoci-agent";
   const KEY = "drg.ceoci.code";
-  const state = { all: [], rows: [], hidden: 0, filter: "All", gtype: "All", rband: "All", q: "", sel: null, code: "", runs: [], active: null };
+  const state = { all: [], rows: [], hidden: 0, filter: "All", special: "", gtype: "All", rband: "All", q: "", sel: null, code: "", runs: [], active: null };
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
@@ -445,9 +453,22 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   }
   function others(r) { if (r.status === "Rejected") return []; return ((state.stack || {})[coKey(r)] || []).filter(x => x.id !== r.id && goalLabel(x.goal_type) !== goalLabel(r.goal_type)); }
   const isHot = r => r.status !== "Rejected" && (others(r).length > 0 || (r.status === "Qualified" && Number(r.score) >= 80));
+  // KPI cards "band" and "new" filter on exactly what they count.
+  const inBand = r => { const f = fin(r); return !!(f && f.revenue && f.revenue.low >= 10 && f.revenue.high <= 200 && r.status !== "Rejected"); };
+  const isNew = r => Date.parse(r.createdAt) >= Date.now() - 7 * 864e5 && r.status !== "Rejected";
+  const SPECIAL = { band: ["Live signals with sourced revenue of $10M–$200M", inBand], new: ["Live signals found in the last 7 days", isNew] };
+  function specialOk(r) { return !state.special || !SPECIAL[state.special] || SPECIAL[state.special][1](r); }
+  function kpiGo(k) {
+    state.gtype = "All"; state.rband = "All"; state.q = ""; $("search").value = ""; $("rband").value = "All";
+    state.special = (k === "band" || k === "new") ? k : "";
+    state.filter = { q: "Qualified", r: "Review", x: "Rejected" }[k] || "All";
+    state.sel = null; render();
+    const t = document.querySelector(".main"); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
   function filtered() {
     const q = state.q.trim().toLowerCase();
     return state.rows.filter(r =>
+      specialOk(r) &&
       (state.filter === "All" || (state.filter === "Hot" ? isHot(r) : state.filter === "Contacted" ? r.review_action === "contacted" : r.status === state.filter)) &&
       (state.gtype === "All" || goalLabel(r.goal_type) === state.gtype) &&
       bandOk(r) &&
@@ -460,6 +481,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     $("k-all").textContent = state.rows.length;
     $("k-band").textContent = state.rows.filter(r => { const f = fin(r); return f && f.revenue && f.revenue.low >= 10 && f.revenue.high <= 200 && r.status !== "Rejected"; }).length;
     $("k-new").textContent = state.rows.filter(r => Date.parse(r.createdAt) >= week && r.status !== "Rejected").length;
+    const cur = state.special || (state.filter === "Qualified" ? "q" : state.filter === "Review" ? "r" : state.filter === "Rejected" ? "x" : state.filter === "All" ? "all" : "");
+    document.querySelectorAll("[data-kpi]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.kpi === cur)));
   }
   function renderChips() {
     $("chips").innerHTML = ["All", "Hot", "Qualified", "Review", "Contacted", "Rejected"].map(o => {
@@ -475,6 +498,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   function meter(s) { return '<span class="score"><span class="meter"><i style="width:' + Math.max(0, Math.min(100, s)) + '%"></i></span>' + s + "</span>"; }
   function renderList() {
     const rows = filtered();
+    const vb = $("viewing");
+    if (vb) vb.innerHTML = state.special ? '<span>Showing: <b>' + esc(SPECIAL[state.special][0]) + "</b> (" + rows.length + ')</span><button type="button" data-clearspecial>Show all signals</button>' : "";
+    if (vb) vb.hidden = !state.special;
     if (!rows.length) { $("list").innerHTML = '<p class="empty">' + (state.rows.length ? "No signals match this filter." : "No signals yet. They appear here after the agent's first run.") + "</p>"; return; }
     if (!rows.some(r => String(r.id) === String(state.sel))) state.sel = rows[0].id;
     $("list").innerHTML = rows.map(r => {
@@ -760,9 +786,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   document.addEventListener("click", e => {
     if (e.target.closest("[data-close]")) { panel("", ""); return; }
     const chip = e.target.closest("[data-f]");
-    if (chip) { state.filter = chip.dataset.f; store.set("drg.ceoci.filter", state.filter); render(); return; }
+    if (chip) { state.special = ""; state.filter = chip.dataset.f; store.set("drg.ceoci.filter", state.filter); render(); return; }
     const item = e.target.closest(".item");
     if (item) { state.sel = item.dataset.id; renderList(); renderDetail(); if (window.innerWidth < 900) $("detail").scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+    const kp = e.target.closest("[data-kpi]");
+    if (kp) { kpiGo(kp.dataset.kpi); return; }
+    if (e.target.closest("[data-clearspecial]")) { state.special = ""; render(); return; }
     const rvb = e.target.closest("[data-review]");
     if (rvb) { review(rvb.dataset.review); return; }
     const jp = e.target.closest("[data-jump]");
