@@ -11,6 +11,11 @@ This branch (`staging`) holds the site. `main` intentionally has no site, so no 
 
 - Team sign-in with a shared access code (stored in the browser after the first entry)
 - Live signal list with status (Qualified, Review, Rejected), score and the reasons behind it
+- ICP: private US/Canada companies with 50+ employees and sourced annual revenue of $10M–$200M
+- **Financial snapshot** per company: revenue (with basis: company-stated, press-reported or third-party estimate), headcount now vs. earlier, funding and growth facts, each linked to its source. Private companies publish no P&L, so these are sourced estimates, never invented
+- Challenge-style copy built from the CEO's own numbers (pace needed vs. recent pace)
+- **Personalized assets:** a 3-slide PPT (goal, the math, who has done it) and a 1080×1080 image card, generated in the browser from the checked facts
+- Revenue filter ($10M–$20M, $20M–$50M, $50M–$200M, outside band, not found)
 - For each signal: the stated goal (from, to, by when) and pace, the exact quote, the CEO and LinkedIn,
   company size, ownership and HQ with sources, plus Email 1, the LinkedIn note and the LinkedIn DM with Copy buttons
 - Filters by status and goal type, search, **Download all as CSV** and **CSV of this view** (32 columns)

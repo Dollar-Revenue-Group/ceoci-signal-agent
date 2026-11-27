@@ -67,7 +67,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .notice.warn{background:#FBFCE6;border-color:var(--yellow)}
 .notice.err{background:var(--red-bg);border-color:#F3B89B}
 
-.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:20px}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-top:20px}
 .kpi{border-radius:var(--r);padding:14px 16px;background:var(--mist);display:flex;flex-direction:column;gap:6px;min-width:0}
 .kpi .n{font-size:30px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
 .kpi .k{font-size:12px;font-weight:600;color:var(--muted)}
@@ -154,6 +154,25 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);padding-block:20px 28px;border-top:1px solid var(--line);margin-top:24px}
 .tag{font-weight:800;color:var(--ink)}
 
+.fin{border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.fin .fh{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.fin .est{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:#FBFCE6;border:1px solid var(--yellow)}
+.fgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ftile{background:var(--mist);border-radius:10px;padding:12px;min-width:0;display:flex;flex-direction:column;gap:4px}
+.ftile .big{font-size:20px;font-weight:800;line-height:1.15;overflow-wrap:anywhere}
+.ftile .sub{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.ftile a,.flist a{color:var(--muted);font-size:11.5px;overflow-wrap:anywhere}
+.ftile.empty .big{font-size:14px;color:var(--soft);font-weight:700}
+.basis{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:6px;background:#fff;border:1px solid var(--line);margin-left:6px;vertical-align:middle}
+.flist{margin:0;padding-left:18px;font-size:13px;display:flex;flex-direction:column;gap:4px}
+.fnote{font-size:11.5px;color:var(--muted)}
+.goalcard .chal{font-size:13.5px;color:var(--yellow);font-weight:700;line-height:1.45}
+.assets{border:2px dashed var(--line);border-radius:var(--r);padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.assets .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.assets canvas{width:100%;max-width:360px;height:auto;border-radius:10px;border:1px solid var(--line);display:block}
+.rechk{border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700}
+@media (max-width:1100px){.fgrid{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.fgrid{grid-template-columns:1fr}}
 @media (max-width:1100px){.steps{grid-template-columns:repeat(3,minmax(0,1fr))}.lower{grid-template-columns:1fr}.facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:900px){.main{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.list{max-height:none}}
 @media (max-width:520px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.facts{grid-template-columns:1fr}.steps{grid-template-columns:repeat(2,minmax(0,1fr))}.brand h1{font-size:16px}}
@@ -200,6 +219,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     <div class="kpi"><span class="n" id="k-r">0</span><span class="k">Need a human check</span></div>
     <div class="kpi"><span class="n" id="k-x">0</span><span class="k">Rejected by the agent</span></div>
     <div class="kpi"><span class="n" id="k-all">0</span><span class="k">Stated goals found</span></div>
+    <div class="kpi"><span class="n" id="k-band">0</span><span class="k">Revenue sourced at $10M–$200M</span></div>
     <div class="kpi"><span class="n" id="k-new">0</span><span class="k">Found in the last 7 days</span></div>
   </section>
 
@@ -208,6 +228,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       <div class="tools">
         <div role="group" aria-label="Filter by status" id="chips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
         <select class="sel" id="gtype" aria-label="Filter by goal type"></select>
+        <select class="sel" id="rband" aria-label="Filter by revenue"><option value="All">All revenue</option><option value="10-20">$10M–$20M</option><option value="20-50">$20M–$50M</option><option value="50-200">$50M–$200M</option><option value="out">Outside $10M–$200M</option><option value="none">Revenue not found</option></select>
         <input class="search" id="search" type="search" placeholder="Search company, CEO, goal, publication" aria-label="Search signals">
         <button type="button" class="btn dl" id="csvAll">Download all as CSV</button>
         <button type="button" class="btn dl ghostdl" id="csvView">CSV of this view</button>
@@ -225,8 +246,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
         <div class="step"><i>2</i><b>Read</b><span>Opens each article and keeps only ones under 120 days old with a numeric goal.</span></div>
         <div class="step"><i>3</i><b>AI extracts</b><span>Pulls the goal, the speaker and the exact sentence. Job cuts and one-off openings are dropped.</span></div>
         <div class="step"><i>4</i><b>Code checks</b><span>Quote must appear word for word, with the target number in it. Passed deadlines are rejected.</span></div>
-        <div class="step"><i>5</i><b>Company + CEO</b><span>Web search for size, ownership and CEO, each with a source. Public, subsidiaries, &lt;50 staff and non-US/Canada are out.</span></div>
-        <div class="step"><i>6</i><b>Score + write</b><span>Qualified at 60+. Email and LinkedIn copy are built by code from checked facts only.</span></div>
+        <div class="step"><i>5</i><b>Company + CEO</b><span>Web search for size, ownership, CEO and a financial snapshot, each with a link. Public, subsidiaries, &lt;50 staff, non-US/Canada and revenue outside $10M–$200M are out.</span></div>
+        <div class="step"><i>6</i><b>Score + write</b><span>Qualified at 60+. Challenge-style copy, a 3-slide PPT and an image card are built from checked facts only.</span></div>
       </div>
     </div>
     <div class="setup">
@@ -251,7 +272,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 (function(){
   const API = "https://n8n-bkfvq-u78038.vm.elestio.app/webhook/ceoci-agent";
   const KEY = "drg.ceoci.code";
-  const state = { all: [], rows: [], hidden: 0, filter: "All", gtype: "All", q: "", sel: null, code: "", runs: [], active: null };
+  const state = { all: [], rows: [], hidden: 0, filter: "All", gtype: "All", rband: "All", q: "", sel: null, code: "", runs: [], active: null };
   const $ = id => document.getElementById(id);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
@@ -327,12 +348,51 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     catch (e) { $("rundot").className = "dot"; $("runtext").textContent = "Run status unavailable"; }
   }
 
+  // ---------- financials ----------
+  function fin(r) { if (!r.financials_json) return null; try { return JSON.parse(r.financials_json); } catch (e) { return null; } }
+  function pace(r) { if (!r.pace_json) return {}; try { return JSON.parse(r.pace_json) || {}; } catch (e) { return {}; } }
+  function bandOk(r) {
+    if (state.rband === "All") return true;
+    const f = fin(r), rv = f && f.revenue;
+    if (state.rband === "none") return !rv;
+    if (!rv) return false;
+    if (state.rband === "out") return rv.high < 10 || rv.low > 200;
+    const [lo, hi] = state.rband.split("-").map(Number);
+    const m = (rv.low + rv.high) / 2;
+    return m >= lo && m <= hi;
+  }
+  const BASIS = { company_stated: "Company-stated", press_reported: "Reported in press", third_party_estimate: "Third-party estimate" };
+  function hostName(u) { const m = String(u || "").match(/^https?:\/\/([^\/?#]+)/i); return m ? m[1].replace(/^www\./, "") : u; }
+  const srcLink = (u, label) => isUrl(u) ? '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(label || hostName(u)) + " ↗</a>" : "";
+  function money(x) { return x >= 1000 ? "$" + (Math.round(x / 100) / 10) + "B" : x < 10 ? "$" + (Math.round(x * 10) / 10) + "M" : "$" + Math.round(x) + "M"; }
+  function finBlock(r) {
+    const f = fin(r);
+    let h = '<div class="fin"><div class="fh"><p class="label">Financial snapshot</p><span class="est">Sourced estimates, not a P&amp;L</span></div>';
+    if (!f) {
+      h += '<p class="fnote">This signal was found before the financial research was added.' + (isUrl(r.source_url) && r.status !== "Rejected" ? ' <button type="button" class="rechk" data-recheck="' + esc(r.source_url) + '">Re-check this article</button>' : "") + "</p></div>";
+      return h;
+    }
+    const rv = f.revenue, em = f.employees, fu = f.funding;
+    h += '<div class="fgrid">';
+    h += rv ? '<div class="ftile"><p class="label">Annual revenue</p><p class="big">' + esc(rv.low === rv.high ? money(rv.low) : money(rv.low) + "–" + money(rv.high)) + '</p><p class="sub">' + (rv.year ? esc(rv.year) : "Year not stated") + '<span class="basis">' + esc(BASIS[rv.basis] || "Source") + "</span></p>" + (rv.quote ? '<p class="sub">“' + esc(rv.quote) + "”</p>" : "") + srcLink(rv.source_url) + "</div>"
+            : '<div class="ftile empty"><p class="label">Annual revenue</p><p class="big">No sourced figure found</p><p class="sub">Confirm it is $10M–$200M before outreach.</p></div>';
+    h += em ? '<div class="ftile"><p class="label">Employees</p><p class="big">' + Number(em.now).toLocaleString() + "</p>" + (em.prior ? '<p class="sub">Was ' + Number(em.prior).toLocaleString() + " in " + esc(em.prior_date) + (em.growth_pct != null ? " (" + (em.growth_pct >= 0 ? "+" : "") + em.growth_pct + "%)" : "") + "</p>" : '<p class="sub">No earlier headcount found</p>') + srcLink(em.source_url, "Now: " + hostName(em.source_url)) + (em.prior ? srcLink(em.prior_source_url, "Earlier: " + hostName(em.prior_source_url)) : "") + "</div>"
+            : '<div class="ftile empty"><p class="label">Employees</p><p class="big">Not found</p></div>';
+    h += fu ? '<div class="ftile"><p class="label">Funding / ownership</p><p class="big">' + (fu.total_musd != null ? esc(money(fu.total_musd)) + " raised" : esc(ownLabel(r.ownership) || "Funding found")) + "</p>" + (fu.last_round ? '<p class="sub">' + esc(fu.last_round) + "</p>" : "") + (fu.investors ? '<p class="sub">' + esc(fu.investors) + "</p>" : "") + srcLink(fu.source_url) + "</div>"
+            : '<div class="ftile empty"><p class="label">Funding / ownership</p><p class="big">' + (r.ownership ? esc(ownLabel(r.ownership)) : "No funding found") + '</p><p class="sub">No outside funding found in sources</p></div>';
+    h += "</div>";
+    if (f.growth_facts && f.growth_facts.length) h += '<div><p class="label" style="margin-bottom:6px">Growth facts</p><ul class="flist">' + f.growth_facts.map(g => "<li>" + esc(g.fact) + " " + srcLink(g.source_url) + "</li>").join("") + "</ul></div>";
+    h += '<p class="fnote">Private companies don\'t publish a P&amp;L or financial statements. Every figure here comes from the linked page; third-party figures are estimates. Check the source before quoting a number to the prospect.</p></div>';
+    return h;
+  }
+
   // ---------- render ----------
   function filtered() {
     const q = state.q.trim().toLowerCase();
     return state.rows.filter(r =>
       (state.filter === "All" || r.status === state.filter) &&
       (state.gtype === "All" || goalLabel(r.goal_type) === state.gtype) &&
+      bandOk(r) &&
       (!q || [r.company, r.ceo_name, r.speaker_name, r.goal_phrase, r.publication, r.company_domain, r.exact_quote].join(" ").toLowerCase().includes(q)));
   }
   function renderKpis() {
@@ -340,6 +400,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     const week = Date.now() - 7 * 864e5;
     $("k-q").textContent = c("Qualified"); $("k-r").textContent = c("Review"); $("k-x").textContent = c("Rejected");
     $("k-all").textContent = state.rows.length;
+    $("k-band").textContent = state.rows.filter(r => { const f = fin(r); return f && f.revenue && f.revenue.low >= 10 && f.revenue.high <= 200 && r.status !== "Rejected"; }).length;
     $("k-new").textContent = state.rows.filter(r => Date.parse(r.createdAt) >= week && r.status !== "Rejected").length;
   }
   function renderChips() {
@@ -360,7 +421,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     if (!rows.some(r => String(r.id) === String(state.sel))) state.sel = rows[0].id;
     $("list").innerHTML = rows.map(r => {
       const s = Number(r.score) || 0;
-      return '<button type="button" class="item" data-id="' + esc(r.id) + '" aria-current="' + (String(r.id) === String(state.sel)) + '"><div style="min-width:0"><p class="co">' + esc(r.company) + '</p><p class="goal">' + esc(r.goal_phrase) + '</p><p class="meta">' + esc(goalLabel(r.goal_type)) + (r.publication ? " · " + esc(r.publication) : "") + (r.published_date ? " · " + esc(fmtDate(r.published_date)) : "") + '</p></div><div class="right"><span class="pill ' + esc(r.status) + '">' + esc(r.status) + "</span>" + meter(s) + "</div></button>";
+      return '<button type="button" class="item" data-id="' + esc(r.id) + '" aria-current="' + (String(r.id) === String(state.sel)) + '"><div style="min-width:0"><p class="co">' + esc(r.company) + '</p><p class="goal">' + esc(r.goal_phrase) + '</p><p class="meta">' + (r.revenue_label ? "<b>" + esc(r.revenue_label.replace(/, (reported|company-stated|estimate)$/, "")) + "</b> · " : "") + esc(goalLabel(r.goal_type)) + (r.publication ? " · " + esc(r.publication) : "") + (r.published_date ? " · " + esc(fmtDate(r.published_date)) : "") + '</p></div><div class="right"><span class="pill ' + esc(r.status) + '">' + esc(r.status) + "</span>" + meter(s) + "</div></button>";
     }).join("");
   }
   function fact(k, v, html) { return v ? '<div class="fact"><p class="label">' + k + '</p><p class="v">' + (html ? v : esc(v)) + "</p></div>" : ""; }
@@ -376,7 +437,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     const reasons = String(r.reasons || "").split(" | ").map(x => x.trim()).filter(Boolean);
     const whyHead = r.status === "Qualified" ? "Why it qualified" : r.status === "Review" ? "Check before sending" : "Why it was rejected";
     const whyBody = reasons.length ? "<ul>" + reasons.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>"
-      : (r.status === "Qualified" ? " Quote verified word for word in the article, deadline is ahead, and the company fits the ICP (private, US/Canada, 50+ employees)." : "");
+      : (r.status === "Qualified" ? " Quote verified word for word in the article, deadline is ahead, and the company fits the ICP (private, US/Canada, 50+ employees, sourced revenue of $10M–$200M)." : "");
     const metaBits = [r.company_domain, r.hq_country, r.employees ? Number(r.employees).toLocaleString() + " employees" : "", r.ownership ? ownLabel(r.ownership) : ""].filter(Boolean);
     let h = '<div class="detail"><div class="dh"><div class="pills"><span class="pill ' + esc(r.status) + '">' + esc(r.status) + "</span>" + (s >= 80 && r.status === "Qualified" ? '<span class="pill Hot">Hot</span>' : "") + '<span class="pill type">' + esc(goalLabel(r.goal_type)) + "</span>" + meter(s).replace('">', '">Score ') + "</div><h2>" + esc(r.company) + '</h2><p class="meta">' + esc(metaBits.join(" · ")) + "</p></div>";
     h += '<div class="why ' + esc(r.status) + '"><b>' + whyHead + ":</b>" + whyBody + "</div>";
@@ -385,7 +446,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       (r.baseline ? "<span>From<b>" + esc(r.baseline) + " " + esc(r.unit) + "</b></span>" : "") +
       (r.target ? "<span>" + (r.baseline ? "To" : "Target") + "<b>" + esc(r.target) + " " + esc(r.unit) + "</b></span>" : "") +
       (r.deadline ? "<span>By<b>" + esc(r.deadline) + "</b></span>" : "<span>By<b>No deadline stated</b></span>") +
-      "</div>" + (r.math_line ? '<p class="math">' + esc(r.math_line) + "</p>" : "") + "</div>";
+      "</div>" + (r.challenge_line ? '<p class="chal">' + esc(r.challenge_line) + "</p>" : (r.math_line ? '<p class="math">' + esc(r.math_line) + "</p>" : "")) + "</div>";
+    h += finBlock(r);
 
     if (r.exact_quote) {
       const qlabel = r.quote_type === "direct_quote" ? "Direct quote" : "As reported by " + (r.publication || "the article");
@@ -406,6 +468,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     } else if (r.status === "Rejected") h += '<p class="why">No outreach is written for rejected signals.</p>';
     else h += '<p class="why">No outreach written for this signal yet.</p>';
 
+    if (r.status !== "Rejected" && r.goal_phrase) {
+      const pc = pace(r);
+      h += '<div class="assets"><p class="label">Personalized assets</p><p class="fnote">Built from this signal\'s checked facts only. Review before sending.</p><div class="row"><button type="button" class="btn dl" data-asset="pptx">Download 3-slide PPT</button>' + (pc.pace_short ? '<button type="button" class="btn dl ghostdl" data-asset="png">Download image card (PNG)</button>' : '<span class="fnote">The image card needs a starting number and a deadline in the goal.</span>') + '</div>' + (pc.pace_short ? '<canvas id="card" width="1080" height="1080" aria-label="Image card preview"></canvas>' : "") + "</div>";
+    }
     const links = [];
     if (isUrl(r.source_url)) links.push('<a href="' + esc(r.source_url) + '" target="_blank" rel="noopener">Open the article ↗</a>');
     if (li) links.push('<a href="' + esc(r.ceo_linkedin) + '" target="_blank" rel="noopener">CEO on LinkedIn ↗</a>');
@@ -414,11 +480,118 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     const srcs = String(r.enrichment_sources || "").split(/\s+/).filter(isUrl).filter((u, i, a) => a.indexOf(u) === i);
     if (srcs.length) h += '<div class="srcs"><p class="label">Sources for company size, ownership and CEO</p>' + srcs.map(u => '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(u) + "</a>").join("") + "</div>";
     $("detail").innerHTML = h + "</div>";
+    if ($("card")) drawCard(r, $("card"));
   }
   function render() { renderKpis(); renderChips(); renderList(); renderDetail(); }
 
+  // ---------- assets ----------
+  const PROOF = {
+    G1: "Under Canvas built a repeatable site model with a CCI coach and exited at 32x EBITDA.",
+    G2: "NewDay USA doubled revenue to $300M with a CCI coach and a biweekly accountability rhythm.",
+    G3: "TaskUs fixed hiring, training and accountability with a CCI coach on the way to $3B.",
+    G4: "CCI coaches CEOs in 94 countries; about 20 of its coaches specialize in international expansion.",
+    G5: "About 25 CCI coaches have done M&A as CEOs.",
+    G6: "CCI clients have had 150+ exits worth $30.1B combined.",
+    G7: "Clients with a CCI coach for 2+ years average 37.5% EBITDA growth a year."
+  };
+  const proofFor = r => { const m = String(r.goal_type || "").match(/^G(\d)/); return PROOF[m ? "G" + m[1] : "G2"] || PROOF.G2; };
+  function shortGoal(r) {
+    const t = String(r.target || "").trim(), u = String(r.unit || "").trim(), d = String(r.deadline || "").trim();
+    if (t && u && d && !isNaN(Number(t)) && !/^G2|^G7/.test(r.goal_type || "")) return Number(t).toLocaleString() + " " + u + " by " + d;
+    return String(r.goal_phrase || "").replace(/^./, c => c.toUpperCase());
+  }
+  function sourceLine(r) { return "Source: " + (r.publication || hostName(r.source_url)) + (r.published_date ? ", " + fmtDate(r.published_date) : ""); }
+  function wrap(ctx, text, maxW) {
+    const words = String(text).split(/\s+/), lines = []; let line = "";
+    for (const w of words) { const t = line ? line + " " + w : w; if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+    if (line) lines.push(line); return lines;
+  }
+  function fitText(ctx, text, maxW, maxLines, start, min, weight) {
+    let size = start, lines;
+    do { ctx.font = weight + " " + size + "px Montserrat, Arial, sans-serif"; lines = wrap(ctx, text, maxW); size -= 4; } while (lines.length > maxLines && size >= min);
+    return { lines, size: size + 4 };
+  }
+  async function drawCard(r, cv) {
+    try { if (document.fonts && document.fonts.load) { await document.fonts.load("800 60px Montserrat"); await document.fonts.load("700 30px Montserrat"); } } catch (e) {}
+    const ctx = cv.getContext("2d"), W = 1080, H = 1080, P = 80, pc = pace(r);
+    ctx.fillStyle = "#F4F4F2"; ctx.fillRect(0, 0, W, H / 2);
+    ctx.fillStyle = "#161616"; ctx.fillRect(0, H / 2, W, H / 2);
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#5A5A55"; ctx.font = "700 30px Montserrat, Arial, sans-serif";
+    ctx.fillText(("The plan · " + r.company).toUpperCase().slice(0, 48), P, P);
+    let f = fitText(ctx, shortGoal(r), W - 2 * P, 3, 96, 48, "800");
+    ctx.fillStyle = "#161616"; f.lines.forEach((l, i) => ctx.fillText(l, P, P + 60 + i * f.size * 1.1));
+    ctx.fillStyle = "#F2C94C"; ctx.font = "700 30px Montserrat, Arial, sans-serif";
+    ctx.fillText("THE MATH", P, H / 2 + P);
+    const main = pc.pct_needed != null ? pc.pct_needed + "% growth a year." : String(pc.pace_short || "").replace(/^./, c => c.toUpperCase()) + ".";
+    f = fitText(ctx, main, W - 2 * P, 2, 84, 44, "800");
+    ctx.fillStyle = "#FFFFFF"; f.lines.forEach((l, i) => ctx.fillText(l, P, H / 2 + P + 56 + i * f.size * 1.1));
+    let y2 = H / 2 + P + 56 + f.lines.length * f.size * 1.1 + 22;
+    const sub = (pc.pct_needed != null ? "Every year until the deadline." : "Every month for " + (pc.months_left || "the next") + " months.") + (pc.ratio && pc.ratio >= 1.3 ? " That's " + pc.ratio + "x your recent pace." : " No slow ones.");
+    const fs = fitText(ctx, sub, W - 2 * P, 2, 36, 26, "700");
+    ctx.fillStyle = "#F2C94C"; fs.lines.forEach((l, i) => ctx.fillText(l, P, y2 + i * fs.size * 1.2));
+    ctx.fillStyle = "#9A9A94"; ctx.font = "500 22px Montserrat, Arial, sans-serif";
+    ctx.fillText(sourceLine(r).slice(0, 80), P, H - P - 10);
+  }
+  function downloadBlob(blob, name) {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+  const slug = s => String(s || "signal").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+  function loadPptx() {
+    if (window.PptxGenJS) return Promise.resolve();
+    return new Promise((ok, bad) => { const sc = document.createElement("script"); sc.src = "https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"; sc.onload = ok; sc.onerror = () => bad(new Error("Couldn't load the slide builder. Check your connection and try again.")); document.head.appendChild(sc); });
+  }
+  function buildDeck(r) {
+    const pc = pace(r), F = "Montserrat", INK = "161616", ACC = "F2C94C", GREY = "5A5A55";
+    const p = new PptxGenJS(); p.layout = "LAYOUT_WIDE"; p.title = r.company + " growth goal";
+    const foot = (s, dark) => s.addText((r.ceo_name ? "Prepared for " + r.ceo_name + ", " : "Prepared for ") + r.company + "  ·  CEO Coaching International", { x: 0.6, y: 6.85, w: 12, h: 0.4, fontFace: F, fontSize: 11, color: dark ? "9A9A94" : GREY });
+    // 1. The goal
+    let s = p.addSlide(); s.background = { color: "FFFFFF" };
+    s.addText("YOUR GOAL", { x: 0.6, y: 0.5, w: 12, h: 0.4, fontFace: F, fontSize: 14, bold: true, color: GREY, charSpacing: 4 });
+    s.addText(shortGoal(r), { x: 0.6, y: 1.0, w: 12.1, h: 1.9, fontFace: F, fontSize: 48, bold: true, color: INK, valign: "top", fit: "shrink" });
+    if (r.exact_quote) s.addText("“" + r.exact_quote + "”", { x: 0.6, y: 3.3, w: 12.1, h: 2.2, fontFace: F, fontSize: 20, italic: true, color: "2A2A2A", valign: "top", fit: "shrink" });
+    s.addText(sourceLine(r) + (isUrl(r.source_url) ? "  ·  " + hostName(r.source_url) : ""), { x: 0.6, y: 5.8, w: 12, h: 0.4, fontFace: F, fontSize: 12, color: GREY });
+    foot(s);
+    // 2. The math
+    s = p.addSlide(); s.background = { color: INK };
+    s.addText("THE MATH", { x: 0.6, y: 0.5, w: 12, h: 0.4, fontFace: F, fontSize: 14, bold: true, color: ACC, charSpacing: 4 });
+    const boxes = [];
+    if (r.baseline !== "" && r.target !== "" && !isNaN(Number(r.target) - Number(r.baseline)) && !/^G2|^G7/.test(r.goal_type || "")) boxes.push(["Still to add", (Number(r.target) - Number(r.baseline)).toLocaleString() + " " + r.unit]);
+    if (pc.months_left) boxes.push(["Time left", pc.months_left + " months"]);
+    if (pc.pace_short) boxes.push(["Pace needed", pc.pct_needed != null ? pc.pct_needed + "% a year" : pc.pace_short]);
+    if (pc.hist_per_month != null && pc.hist_months) boxes.push(["Your recent pace", (Math.round(pc.hist_per_month * 10) / 10) + " " + r.unit + " a month"]);
+    const bw = boxes.length ? (12.1 - 0.3 * (boxes.length - 1)) / boxes.length : 12.1;
+    boxes.forEach((b, i) => {
+      const x = 0.6 + i * (bw + 0.3);
+      s.addShape(p.ShapeType.rect, { x, y: 1.2, w: bw, h: 2.3, fill: { color: "2A2A2A" }, line: { color: "2A2A2A" } });
+      s.addText(b[0].toUpperCase(), { x: x + 0.25, y: 1.4, w: bw - 0.5, h: 0.4, fontFace: F, fontSize: 12, bold: true, color: "CFCFCA" });
+      s.addText(b[1], { x: x + 0.25, y: 1.9, w: bw - 0.5, h: 1.4, fontFace: F, fontSize: boxes.length > 3 ? 22 : 26, bold: true, color: "FFFFFF", valign: "top", fit: "shrink" });
+    });
+    s.addText(r.challenge_line || r.math_line || "No deadline was stated, so the pace can't be calculated yet.", { x: 0.6, y: 3.9, w: 12.1, h: 2.2, fontFace: F, fontSize: 22, bold: true, color: ACC, valign: "top", fit: "shrink" });
+    const fx = fin(r); const em = fx && fx.employees;
+    if (em && em.prior) s.addText("Headcount sources: " + hostName(em.prior_source_url) + " (" + em.prior_date + "), " + hostName(em.source_url) + " (now)", { x: 0.6, y: 6.3, w: 12, h: 0.4, fontFace: F, fontSize: 11, color: "9A9A94" });
+    foot(s, true);
+    // 3. Who has done it
+    s = p.addSlide(); s.background = { color: "FFFFFF" };
+    s.addText("WHO HAS DONE THIS BEFORE", { x: 0.6, y: 0.5, w: 12, h: 0.4, fontFace: F, fontSize: 14, bold: true, color: GREY, charSpacing: 4 });
+    s.addText("Every CEO Coaching International coach is a former CEO.", { x: 0.6, y: 1.0, w: 12.1, h: 1.3, fontFace: F, fontSize: 36, bold: true, color: INK, valign: "top", fit: "shrink" });
+    s.addText(proofFor(r), { x: 0.6, y: 2.6, w: 12.1, h: 1.2, fontFace: F, fontSize: 22, color: "2A2A2A", valign: "top", fit: "shrink" });
+    s.addShape(p.ShapeType.rect, { x: 0.6, y: 4.3, w: 12.1, h: 1.6, fill: { color: INK }, line: { color: INK } });
+    s.addText("30 minutes with a coach who has scaled through this. We pressure-test the plan: what breaks first at this pace, and what to fix now. No pitch.", { x: 0.9, y: 4.45, w: 11.5, h: 1.3, fontFace: F, fontSize: 18, bold: true, color: "FFFFFF", valign: "middle", fit: "shrink" });
+    foot(s);
+    return p;
+  }
+  async function buildPptx(r, btn) {
+    const old = btn.textContent; btn.disabled = true; btn.textContent = "Building…";
+    try { await loadPptx(); await buildDeck(r).writeFile({ fileName: slug(r.company) + "-growth-goal.pptx" }); }
+    catch (e) { notice("err", "<b>Couldn't build the slides.</b> " + esc(e.message || e)); }
+    finally { btn.disabled = false; btn.textContent = old; }
+  }
+  window.__ceoci = { buildDeck: buildDeck, rows: () => state.rows };
+
   // ---------- CSV ----------
-  const COLS = [["found_on","Found on"],["status","Status"],["score","Score"],["reasons","Reasons"],["company","Company"],["company_domain","Domain"],["hq_country","HQ country"],["employees","Employees"],["ownership","Ownership"],["ceo_name","CEO name"],["ceo_title","CEO title"],["ceo_linkedin","CEO LinkedIn"],["speaker_name","Speaker"],["speaker_title","Speaker title"],["goal_type","Goal type"],["goal_phrase","Goal"],["exact_quote","Exact quote"],["quote_type","Quote type"],["baseline","Baseline"],["target","Target"],["unit","Unit"],["deadline","Deadline"],["math_line","Pace line"],["source_url","Article URL"],["publication","Publication"],["published_date","Published"],["source_age_days","Source age (days)"],["email_subject","Email subject"],["email_body","Email body"],["linkedin_note","LinkedIn note"],["linkedin_dm","LinkedIn DM"],["enrichment_sources","Enrichment sources"]];
+  const COLS = [["found_on","Found on"],["status","Status"],["score","Score"],["reasons","Reasons"],["company","Company"],["company_domain","Domain"],["hq_country","HQ country"],["employees","Employees"],["ownership","Ownership"],["ceo_name","CEO name"],["ceo_title","CEO title"],["ceo_linkedin","CEO LinkedIn"],["speaker_name","Speaker"],["speaker_title","Speaker title"],["goal_type","Goal type"],["goal_phrase","Goal"],["exact_quote","Exact quote"],["quote_type","Quote type"],["baseline","Baseline"],["target","Target"],["unit","Unit"],["deadline","Deadline"],["math_line","Pace line"],["challenge_line","Challenge line"],["revenue_label","Revenue (sourced)"],["source_url","Article URL"],["publication","Publication"],["published_date","Published"],["source_age_days","Source age (days)"],["email_subject","Email subject"],["email_body","Email body"],["linkedin_note","LinkedIn note"],["linkedin_dm","LinkedIn DM"],["enrichment_sources","Enrichment sources"]];
   function csvCell(v) { let s = v == null ? "" : String(v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
   function downloadCsv(rows, label) {
     if (!rows.length) { notice("warn", "<b>Nothing to download.</b> This view has no signals."); return; }
@@ -440,6 +613,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     if (chip) { state.filter = chip.dataset.f; store.set("drg.ceoci.filter", state.filter); render(); return; }
     const item = e.target.closest(".item");
     if (item) { state.sel = item.dataset.id; renderList(); renderDetail(); if (window.innerWidth < 900) $("detail").scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+    const as = e.target.closest("[data-asset]");
+    if (as) {
+      const r = state.rows.find(x => String(x.id) === String(state.sel)); if (!r) return;
+      if (as.dataset.asset === "pptx") buildPptx(r, as);
+      else { const cv = $("card"); if (cv) cv.toBlob(b => b && downloadBlob(b, slug(r.company) + "-goal-card.png"), "image/png"); }
+      return;
+    }
+    const rc = e.target.closest("[data-recheck]");
+    if (rc) { if (!state.active) startRun(rc.dataset.recheck); return; }
     const cp = e.target.closest("[data-copy]");
     if (cp) {
       const el = $("txt-" + cp.dataset.copy); const text = el ? el.innerText : "";
@@ -450,6 +632,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   });
   $("search").addEventListener("input", e => { state.q = e.target.value; renderChips(); renderList(); renderDetail(); });
   $("gtype").addEventListener("change", e => { state.gtype = e.target.value; render(); });
+  $("rband").addEventListener("change", e => { state.rband = e.target.value; render(); });
 
   // ---------- runs ----------
   function fixFor(msg) {
