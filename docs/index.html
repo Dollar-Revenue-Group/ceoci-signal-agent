@@ -171,6 +171,40 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .assets .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .assets canvas{width:100%;max-width:360px;height:auto;border-radius:10px;border:1px solid var(--line);display:block}
 .rechk{border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700}
+.revbar{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.revbar .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.revbar input{flex:1 1 200px;min-width:0;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px}
+.rb{border:1px solid var(--ink);background:#fff;color:var(--ink);border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:700}
+.rb.ok{background:var(--green);border-color:var(--green)} .rb.no{color:var(--red);border-color:#F3B89B}
+.revdone{font-size:12.5px;color:var(--muted)} .revdone b{color:var(--ink)}
+.pill.Stack{background:#fff;color:var(--ink);border:1px solid var(--ink)}
+.pill.Contacted{background:#E7F0FF;color:#1D3F8F}
+.pill.Audit{background:#EAFBEF;color:#126B2B;border:1px solid #9EE5B2} .pill.AuditBad{background:var(--red-bg);color:var(--red)}
+.also{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.also button{background:none;border:0;padding:0;text-align:left;font:inherit;color:var(--ink);text-decoration:underline;cursor:pointer}
+.funnelwrap{margin-top:20px;border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,.9fr);gap:22px}
+.fun{display:flex;flex-direction:column;gap:8px}
+.frow{display:grid;grid-template-columns:150px minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:12.5px}
+.frow .bar2{height:14px;border-radius:4px;background:var(--mist);overflow:hidden}
+.frow .bar2 i{display:block;height:100%;background:var(--ink)}
+.frow.q .bar2 i{background:var(--green)}
+.frow b{font-variant-numeric:tabular-nums;text-align:right}
+.drops{font-size:11.5px;color:var(--muted);line-height:1.5}
+.mix{display:flex;flex-direction:column;gap:6px;font-size:12.5px}
+.mix .m{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed var(--line);padding-bottom:4px}
+.trust{background:var(--ink);color:#fff;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;font-size:12.5px}
+.trust .big{font-size:26px;font-weight:800;color:var(--green);line-height:1}
+.trust p{color:#CFCFCA}
+.digest{position:fixed;inset:0;background:rgba(25,25,25,.6);z-index:20;overflow:auto;padding:30px 16px}
+.dg{background:#fff;max-width:860px;margin:0 auto;border-radius:18px;padding:28px 30px;display:flex;flex-direction:column;gap:18px}
+.dg h2{font-size:24px;font-weight:800}
+.dg .dk{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.dg .dk div{background:var(--mist);border-radius:10px;padding:12px} .dg .dk b{display:block;font-size:26px;font-weight:800}
+.dg .lead{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:4px}
+.dg .lead .t{font-weight:800;font-size:15px} .dg .lead .s{font-size:12.5px;color:var(--muted)} .dg .lead .c{font-size:13px;font-weight:600}
+.dg .acts{display:flex;gap:10px;justify-content:flex-end}
+@media print{body.printing #app>*:not(#digest){display:none!important}body.printing .digest{position:static;background:none;padding:0}body.printing .dg .acts{display:none}}
+@media (max-width:1100px){.funnelwrap{grid-template-columns:1fr}}
 @media (max-width:1100px){.fgrid{grid-template-columns:1fr 1fr}}
 @media (max-width:520px){.fgrid{grid-template-columns:1fr}}
 @media (max-width:1100px){.steps{grid-template-columns:repeat(3,minmax(0,1fr))}.lower{grid-template-columns:1fr}.facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -193,6 +227,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 </div>
 
 <div id="app" hidden>
+<div class="digest" id="digest" hidden></div>
 <header class="bar">
   <div class="wrap">
     <div class="brand">
@@ -204,6 +239,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     </div>
     <div class="runbox">
       <button type="button" class="runstate" id="runstate" title="Show details of the last run"><span class="dot" id="rundot"></span><span id="runtext">Checking last run…</span></button>
+      <button class="btn ghost" id="digestbtn" type="button" style="color:#fff">Weekly digest</button>
       <button class="btn ghost" id="urlbtn" type="button" style="color:#fff">Check article links</button>
       <button class="btn primary" id="runbtn" type="button">Run agent now</button>
     </div>
@@ -213,15 +249,17 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 
 <main class="wrap">
   <div id="notice"></div>
+  <div id="failalert"></div>
 
   <section class="kpis" aria-label="Summary">
     <div class="kpi q"><span class="n" id="k-q">0</span><span class="k">Qualified, ready for outreach</span></div>
     <div class="kpi"><span class="n" id="k-r">0</span><span class="k">Need a human check</span></div>
     <div class="kpi"><span class="n" id="k-x">0</span><span class="k">Rejected by the agent</span></div>
-    <div class="kpi"><span class="n" id="k-all">0</span><span class="k">Stated goals found</span></div>
+    <div class="kpi"><span class="n" id="k-all">0</span><span class="k">Signals found</span></div>
     <div class="kpi"><span class="n" id="k-band">0</span><span class="k">Revenue sourced at $10M–$200M</span></div>
     <div class="kpi"><span class="n" id="k-new">0</span><span class="k">Found in the last 7 days</span></div>
   </section>
+  <section class="funnelwrap" id="funnel" aria-label="How the agent decides"></section>
 
   <section class="main">
     <div class="panel">
@@ -338,6 +376,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       seen.add(k); out.push(r);
     }
     state.rows = out; state.hidden = rows.length - out.length;
+    buildStacks();
     if (!out.some(r => String(r.id) === String(state.sel))) state.sel = (out.find(r => r.status === "Qualified") || out[0] || {}).id || null;
     render();
     $("fresh").textContent = "Live from n8n · " + out.length + " signals" + (state.hidden ? " (" + state.hidden + " older re-checks hidden)" : "") + " · updated " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -347,7 +386,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     catch (e) { if (e.kind === "code") { store.del(KEY); location.reload(); return false; } notice("err", "<b>Couldn't refresh signals.</b> " + esc(e.message) + " Showing the last list loaded."); return false; }
   }
   async function refreshStatus() {
-    try { const d = await api("status"); state.runs = d.runs || []; showRun(state.runs[0]); }
+    try {
+      const d = await api("status"); state.runs = d.runs || []; showRun(state.runs[0]);
+      const bad = state.runs.find(x => x.kind === "scheduled" && x.status === "error" && Date.now() - Date.parse(x.started_at) < 3 * 864e5);
+      $("failalert").innerHTML = bad ? '<div class="notice err"><b>A scheduled agent run failed ' + esc(timeAgo(bad.started_at)) + ".</b> " + esc(String(bad.message || "").replace(/([^.!?])$/, "$1.")) + " " + esc(fixFor(bad.message || "")) + "</div>" : "";
+    }
     catch (e) { $("rundot").className = "dot"; $("runtext").textContent = "Run status unavailable"; }
   }
 
@@ -390,10 +433,22 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   }
 
   // ---------- render ----------
+  // ---------- stacking: one company, several different signals ----------
+  function coKey(r) {
+    const d = String(r.company_domain || "").toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "").trim();
+    if (d && d.includes(".")) return d;
+    return String(r.company || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\b(inc|llc|corp|corporation|co|ltd|company|the|group|holdings)\b/g, " ").replace(/\s+/g, " ").trim();
+  }
+  function buildStacks() {
+    state.stack = {};
+    for (const r of state.rows) { if (r.status === "Rejected") continue; const k = coKey(r); if (!k) continue; (state.stack[k] = state.stack[k] || []).push(r); }
+  }
+  function others(r) { if (r.status === "Rejected") return []; return ((state.stack || {})[coKey(r)] || []).filter(x => x.id !== r.id && goalLabel(x.goal_type) !== goalLabel(r.goal_type)); }
+  const isHot = r => r.status !== "Rejected" && (others(r).length > 0 || (r.status === "Qualified" && Number(r.score) >= 80));
   function filtered() {
     const q = state.q.trim().toLowerCase();
     return state.rows.filter(r =>
-      (state.filter === "All" || r.status === state.filter) &&
+      (state.filter === "All" || (state.filter === "Hot" ? isHot(r) : state.filter === "Contacted" ? r.review_action === "contacted" : r.status === state.filter)) &&
       (state.gtype === "All" || goalLabel(r.goal_type) === state.gtype) &&
       bandOk(r) &&
       (!q || [r.company, r.ceo_name, r.speaker_name, r.goal_phrase, r.publication, r.company_domain, r.exact_quote].join(" ").toLowerCase().includes(q)));
@@ -407,9 +462,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     $("k-new").textContent = state.rows.filter(r => Date.parse(r.createdAt) >= week && r.status !== "Rejected").length;
   }
   function renderChips() {
-    $("chips").innerHTML = ["All", "Qualified", "Review", "Rejected"].map(o => {
-      const n = o === "All" ? state.rows.length : state.rows.filter(r => r.status === o).length;
-      return '<button type="button" class="chip" data-f="' + o + '" aria-pressed="' + (state.filter === o) + '">' + o + '<span class="c">' + n + "</span></button>";
+    $("chips").innerHTML = ["All", "Hot", "Qualified", "Review", "Contacted", "Rejected"].map(o => {
+      const n = o === "All" ? state.rows.length : o === "Hot" ? state.rows.filter(isHot).length : o === "Contacted" ? state.rows.filter(r => r.review_action === "contacted").length : state.rows.filter(r => r.status === o).length;
+      return '<button type="button" class="chip" data-f="' + o + '" aria-pressed="' + (state.filter === o) + '">' + (o === "Hot" ? "Hot list" : o) + '<span class="c">' + n + "</span></button>";
     }).join("");
     const types = ["All"].concat(Object.values(GOALS).filter(g => state.rows.some(r => goalLabel(r.goal_type) === g)));
     if (!types.includes(state.gtype)) state.gtype = "All";
@@ -424,7 +479,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     if (!rows.some(r => String(r.id) === String(state.sel))) state.sel = rows[0].id;
     $("list").innerHTML = rows.map(r => {
       const s = Number(r.score) || 0;
-      return '<button type="button" class="item" data-id="' + esc(r.id) + '" aria-current="' + (String(r.id) === String(state.sel)) + '"><div style="min-width:0"><p class="co">' + esc(r.company) + '</p><p class="goal">' + esc(r.goal_phrase) + '</p><p class="meta">' + (r.revenue_label ? "<b>" + esc(r.revenue_label.replace(/, (reported|company-stated|estimate)$/, "")) + "</b> · " : "") + esc(goalLabel(r.goal_type)) + (r.publication ? " · " + esc(r.publication) : "") + (r.published_date ? " · " + esc(fmtDate(r.published_date)) : "") + '</p></div><div class="right"><span class="pill ' + esc(r.status) + '">' + esc(r.status) + "</span>" + meter(s) + "</div></button>";
+      return '<button type="button" class="item" data-id="' + esc(r.id) + '" aria-current="' + (String(r.id) === String(state.sel)) + '"><div style="min-width:0"><p class="co">' + esc(r.company) + '</p><p class="goal">' + esc(r.goal_phrase) + '</p><p class="meta">' + (r.revenue_label ? "<b>" + esc(r.revenue_label.replace(/, (reported|company-stated|estimate)$/, "")) + "</b> · " : "") + esc(goalLabel(r.goal_type)) + (r.publication ? " · " + esc(r.publication) : "") + (r.published_date ? " · " + esc(fmtDate(r.published_date)) : "") + '</p></div><div class="right"><span class="pill ' + esc(r.status) + '">' + esc(r.status) + "</span>" + (others(r).length ? '<span class="pill Stack">' + (others(r).length + 1) + " signals</span>" : "") + (r.review_action === "contacted" ? '<span class="pill Contacted">Contacted</span>' : "") + meter(s) + "</div></button>";
     }).join("");
   }
   function fact(k, v, html) { return v ? '<div class="fact"><p class="label">' + k + '</p><p class="v">' + (html ? v : esc(v)) + "</p></div>" : ""; }
@@ -442,8 +497,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     const whyBody = reasons.length ? "<ul>" + reasons.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>"
       : (r.status === "Qualified" ? (r.quote_type === "fdd_filing" ? " Figures come from the franchisor's own disclosure document filed with Minnesota, checked against the PDF, and the company fits the ICP (private, US, franchisor revenue of $10M–$200M)." : r.quote_type === "sec_filing" ? " The company filed this raise with the SEC itself, the filing is recent, and the company fits the ICP (private, US/Canada, 50+ employees, revenue of $10M–$200M)." : " Quote verified word for word in the article, deadline is ahead, and the company fits the ICP (private, US/Canada, 50+ employees, sourced revenue of $10M–$200M).") : "");
     const metaBits = [r.company_domain, r.hq_country, r.employees ? Number(r.employees).toLocaleString() + " employees" : "", r.ownership ? ownLabel(r.ownership) : ""].filter(Boolean);
-    let h = '<div class="detail"><div class="dh"><div class="pills"><span class="pill ' + esc(r.status) + '">' + esc(r.status) + "</span>" + (s >= 80 && r.status === "Qualified" ? '<span class="pill Hot">Hot</span>' : "") + '<span class="pill type">' + esc(goalLabel(r.goal_type)) + "</span>" + meter(s).replace('">', '">Score ') + "</div><h2>" + esc(r.company) + '</h2><p class="meta">' + esc(metaBits.join(" · ")) + "</p></div>";
+    let h = '<div class="detail"><div class="dh"><div class="pills"><span class="pill ' + esc(r.status) + '">' + esc(r.status) + "</span>" + (r.audit_status === "pass" ? '<span class="pill Audit" title="' + esc(r.audit_note || "") + '">Re-verified ' + esc(fmtDate(r.audited_at)) + "</span>" : r.audit_status === "fail" ? '<span class="pill AuditBad" title="' + esc(r.audit_note || "") + '">Audit: check figures</span>' : "") + (s >= 80 && r.status === "Qualified" ? '<span class="pill Hot">Hot</span>' : "") + '<span class="pill type">' + esc(goalLabel(r.goal_type)) + "</span>" + meter(s).replace('">', '">Score ') + "</div><h2>" + esc(r.company) + '</h2><p class="meta">' + esc(metaBits.join(" · ")) + "</p></div>";
     h += '<div class="why ' + esc(r.status) + '"><b>' + whyHead + ":</b>" + whyBody + "</div>";
+    h += reviewBar(r);
+    const oth = others(r);
+    if (oth.length) h += '<div class="also"><p class="label">Stacked signals · ' + (oth.length + 1) + ' different signals for this company</p>' + oth.map(x => '<button type="button" data-jump="' + esc(x.id) + '">' + esc(goalLabel(x.goal_type)) + ": " + esc(x.goal_phrase) + " (" + esc(x.status) + ")</button>").join("") + '<p class="fnote">More than one independent signal is the strongest reason to reach out now.</p></div>';
 
     const fd = (pace(r) || {}).form_d;
     if (fd) {
@@ -502,7 +560,60 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     $("detail").innerHTML = h + "</div>";
     if ($("card")) drawCard(r, $("card"));
   }
-  function render() { renderKpis(); renderChips(); renderList(); renderDetail(); }
+  function reviewBar(r) {
+    const done = r.review_action ? '<p class="revdone"><b>' + ({ approve: "Approved", reject: "Rejected", contacted: "Contacted" }[r.review_action] || r.review_action) + "</b> by the team" + (r.reviewed_at ? " · " + esc(fmtDate(r.reviewed_at)) : "") + (r.review_note ? " · \u201c" + esc(r.review_note) + "\u201d" : "") + "</p>" : "";
+    const btns = r.review_action
+      ? (r.review_action !== "contacted" && r.status === "Qualified" ? '<button type="button" class="rb ok" data-review="contacted">Mark contacted</button>' : "") + '<button type="button" class="rb" data-review="reopen">Undo / reopen</button>'
+      : (r.status !== "Qualified" ? '<button type="button" class="rb ok" data-review="approve">Approve</button>' : '<button type="button" class="rb ok" data-review="contacted">Mark contacted</button>') + (r.status !== "Rejected" ? '<button type="button" class="rb no" data-review="reject">Reject</button>' : '<button type="button" class="rb" data-review="approve">Approve anyway</button>');
+    return '<div class="revbar"><p class="label">Team decision</p>' + done + '<div class="row">' + (r.review_action ? "" : '<input id="revnote" maxlength="300" placeholder="Note (optional): why, or who reached out">') + btns + "</div></div>";
+  }
+  async function review(action) {
+    const r = state.rows.find(x => String(x.id) === String(state.sel)); if (!r) return;
+    const note = ($("revnote") && $("revnote").value) || "";
+    document.querySelectorAll("[data-review]").forEach(b => { b.disabled = true; });
+    try {
+      const d = await api("review", "POST", "&id=" + encodeURIComponent(r.id) + "&action=" + action + "&note=" + encodeURIComponent(note));
+      r.status = d.status; r.review_action = d.review_action; r.review_note = action === "reopen" ? "" : note; r.reviewed_at = d.reviewed_at;
+      buildStacks(); render(); notice("", "");
+    } catch (e) { notice("err", "<b>Couldn't save the decision.</b> " + esc(e.message)); renderDetail(); }
+  }
+  // ---------- funnel: how the agent decides ----------
+  const FACT = /word-for-word|not in the quoted|not in the article|older than 12 months|deadline already passed|could not be matched|no readable text|no item 20|no numeric target|not a full disclosure/i;
+  function cat(r) { if (r.status !== "Rejected") return "pass"; if (/Duplicate of/.test(r.reasons || "")) return "dup"; if (FACT.test(r.reasons || "") && !(r.review_action === "reject")) return "fact"; return r.review_action === "reject" ? "team" : "icp"; }
+  function srcOf(r) { const g = String(r.goal_type || ""); return /^G8/.test(g) ? "SEC Form D filings" : /^G9/.test(g) ? "State incentive awards" : /^G10/.test(g) ? "Franchise disclosure documents" : "News, PR & interviews"; }
+  function funnelNums(rows) {
+    const n = f => rows.filter(f).length;
+    const found = rows.length, dup = n(r => cat(r) === "dup"), fact = n(r => cat(r) === "fact"), icp = n(r => cat(r) === "icp"), team = n(r => cat(r) === "team");
+    return { found, unique: found - dup, verified: found - dup - fact, fit: found - dup - fact - icp - team, q: n(r => r.status === "Qualified"), rv: n(r => r.status === "Review"), dup, fact, icp, team };
+  }
+  function renderFunnel() {
+    const f = funnelNums(state.rows), max = Math.max(1, f.found);
+    const row = (k, v, cls) => '<div class="frow ' + (cls || "") + '"><span>' + k + '</span><span class="bar2"><i style="width:' + Math.round(v / max * 100) + '%"></i></span><b>' + v + "</b></div>";
+    const mix = {}; for (const r of state.rows) { const k = srcOf(r); mix[k] = mix[k] || { all: 0, q: 0 }; mix[k].all++; if (r.status === "Qualified") mix[k].q++; }
+    const live = state.rows.filter(r => r.status !== "Rejected");
+    const linked = live.filter(r => isUrl(r.source_url)).length;
+    const aud = state.rows.filter(r => r.audit_status === "pass" || r.audit_status === "fail"), pass = aud.filter(r => r.audit_status === "pass").length;
+    $("funnel").innerHTML = '<div class="fun"><p class="label">How the agent decides</p>' + row("Signals found", f.found) + row("After duplicates", f.unique) + row("Facts verified", f.verified) + row("Fit the ICP", f.fit) + row("Qualified", f.q, "q") +
+      '<p class="drops">Dropped: ' + f.dup + " duplicates · " + f.fact + " failed a fact check (quote, number or date not in the source) · " + f.icp + " outside the ICP (size, revenue, owner, country)" + (f.team ? " · " + f.team + " rejected by the team" : "") + " · " + f.rv + " waiting for a human check</p></div>" +
+      '<div class="mix"><p class="label">Where signals come from</p>' + Object.keys(mix).sort((a, b) => mix[b].all - mix[a].all).map(k => '<div class="m"><span>' + esc(k) + "</span><span><b>" + mix[k].all + "</b> found · " + mix[k].q + " qualified</span></div>").join("") + "</div>" +
+      '<div class="trust"><p class="label" style="color:var(--green)">Why the numbers can be trusted</p>' + (aud.length ? '<span class="big">' + Math.round(pass / aud.length * 100) + "%</span><p>of audited signals re-verified against the live source (" + pass + " of " + aud.length + ").</p>" : '<span class="big">' + linked + "/" + live.length + "</span><p>live signals link to the source behind every figure.</p>") + "<p>Quotes and figures must appear word for word in the source; revenue comes from SEC filings, audited statements or a cited page; anything uncertain goes to Review.</p></div>";
+  }
+  // ---------- weekly digest ----------
+  function openDigest() {
+    const wk = Date.now() - 7 * 864e5;
+    const rows = state.rows.filter(r => Date.parse(r.createdAt) >= wk);
+    const f = funnelNums(rows);
+    const leads = rows.filter(r => r.status !== "Rejected").sort((a, b) => (b.status === "Qualified") - (a.status === "Qualified") || (others(b).length - others(a).length) || (Number(b.score) - Number(a.score))).slice(0, 10);
+    const d = new Date(), from = new Date(wk);
+    const fmt = x => x.toLocaleDateString([], { month: "short", day: "numeric" });
+    $("digest").innerHTML = '<div class="dg" role="dialog" aria-label="Weekly digest"><div><p class="label">CEO Coaching International · Signal agent · weekly digest</p><h2>' + fmt(from) + " – " + fmt(d) + ", " + d.getFullYear() + "</h2></div>" +
+      '<div class="dk"><div><b>' + f.found + "</b>signals found</div><div><b>" + f.verified + "</b>passed fact checks</div><div><b>" + f.q + '</b>qualified</div><div><b>' + f.rv + "</b>for human review</div></div>" +
+      '<p class="label">Top leads this week</p>' + (leads.length ? leads.map(r => '<div class="lead"><span class="t">' + esc(r.company) + ' <span class="pill ' + esc(r.status) + '">' + esc(r.status) + "</span>" + (others(r).length ? ' <span class="pill Stack">' + (others(r).length + 1) + " signals</span>" : "") + '</span><span class="s">' + esc(goalLabel(r.goal_type)) + (r.ceo_name ? " · " + esc(r.ceo_name) + (r.ceo_title ? ", " + esc(r.ceo_title) : "") : "") + (r.revenue_label ? " · " + esc(r.revenue_label) : "") + '</span><span class="c">' + esc(r.challenge_line || r.goal_phrase || "") + '</span><span class="s">Source: ' + esc(r.publication || hostName(r.source_url)) + "</span></div>").join("") : '<p class="fnote">No new leads this week.</p>') +
+      '<p class="fnote">Every figure above links to its source on the agent site. Rejected this week: ' + f.dup + " duplicates, " + f.fact + " failed fact checks, " + f.icp + " outside the ICP.</p>" +
+      '<div class="acts"><button type="button" class="btn ghostdl" data-digest="print">Print / save as PDF</button><button type="button" class="btn dl" data-digest="close">Close</button></div></div>';
+    $("digest").hidden = false;
+  }
+  function render() { renderKpis(); renderChips(); renderFunnel(); renderList(); renderDetail(); }
 
   // ---------- assets ----------
   const PROOF = {
@@ -652,6 +763,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     if (chip) { state.filter = chip.dataset.f; store.set("drg.ceoci.filter", state.filter); render(); return; }
     const item = e.target.closest(".item");
     if (item) { state.sel = item.dataset.id; renderList(); renderDetail(); if (window.innerWidth < 900) $("detail").scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+    const rvb = e.target.closest("[data-review]");
+    if (rvb) { review(rvb.dataset.review); return; }
+    const jp = e.target.closest("[data-jump]");
+    if (jp) { state.sel = jp.dataset.jump; state.filter = "All"; render(); return; }
+    const dg = e.target.closest("[data-digest]");
+    if (dg) { if (dg.dataset.digest === "print") { document.body.classList.add("printing"); window.print(); setTimeout(() => document.body.classList.remove("printing"), 500); } else $("digest").hidden = true; return; }
+    if (e.target.id === "digest") { $("digest").hidden = true; return; }
     const as = e.target.closest("[data-asset]");
     if (as) {
       const r = state.rows.find(x => String(x.id) === String(state.sel)); if (!r) return;
@@ -669,6 +787,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       try { navigator.clipboard.writeText(text).then(done, fallback); } catch (x) { fallback(); }
     }
   });
+  $("digestbtn").addEventListener("click", openDigest);
   $("search").addEventListener("input", e => { state.q = e.target.value; renderChips(); renderList(); renderDetail(); });
   $("gtype").addEventListener("change", e => { state.gtype = e.target.value; render(); });
   $("rband").addEventListener("change", e => { state.rband = e.target.value; render(); });
@@ -694,7 +813,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   }
   $("runstate").addEventListener("click", () => {
     const r = state.runs[0]; if (!r || state.active) return;
-    const what = r.kind === "urls" ? "Link check" : "News scan";
+    const what = r.kind === "urls" ? "Link check" : r.kind === "scheduled" ? "Scheduled agent run" : "Full scan";
     if (r.status === "error") panel("err", '<div><p class="big">' + what + " #" + esc(r.run_id) + " failed " + esc(timeAgo(r.started_at)) + "</p><p>" + esc(r.message) + '</p><p class="sub">' + esc(fixFor(r.message || "")) + '</p></div><button type="button" class="btn ghost" data-close>Close</button>');
     else if (r.status === "success") panel("ok", '<div><p class="big">' + what + " #" + esc(r.run_id) + " finished " + esc(timeAgo(r.finished_at)) + '</p><p class="sub">' + esc(r.message) + " · took " + dur(secsOf(r)) + '.</p></div><button type="button" class="btn ghost" data-close>Close</button>');
     else if (r.status === "running" && Date.now() - Date.parse(r.started_at) <= 30 * 60000) follow(r.run_id, Date.parse(r.started_at) || Date.now(), r.kind, true);

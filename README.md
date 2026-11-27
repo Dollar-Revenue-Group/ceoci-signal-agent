@@ -37,6 +37,9 @@ This branch (`staging`) holds the site. `main` intentionally has no site, so no 
 | Agent (news) | n8n workflow "CEOCI · Stated-goal signal agent" (folder `CEOCI_Signals_Jay`), weekdays 6:00 AM ET. Reads stated growth goals from news, plus state incentive awards (jobs + investment commitments backed by grants or tax credits) |
 | Agent (SEC Form D) | n8n workflow "CEOCI · Form D capital-raise agent" (same folder), weekdays 6:30 AM ET. Reads SEC EDGAR daily indexes for new Form D filings (private capital raises), keeps US/Canada operating companies with a filed revenue band of $5M+ and $1M+ raised, then applies the same ICP |
 | Agent (franchise FDDs) | n8n workflow "CEOCI · Franchise FDD agent" (same folder), weekdays 7:15 AM ET. Reads new Franchise Disclosure Documents filed with the Minnesota Department of Commerce (CARDS): outlets opened/closed, projected openings, audited franchisor revenue, owner and CEO. Every figure is checked against the PDF text; max 12 FDDs per run |
+| Signal maintenance | n8n workflow "CEOCI · Signal maintenance", weekdays 8:00 AM ET and at the end of every site run. Rejects repeats of the same company + signal, sends Qualified rows that rest on a third-party estimate back to Review, rejects banks/insurers/funds. Never changes rows the team reviewed |
+| Accuracy audit | n8n workflow "CEOCI · Accuracy audit", Mondays 9:00 AM ET or on demand. Re-opens the source of every live signal and checks the shown figures are still there word for word; the site shows the pass rate |
+| Failure log | n8n workflow "CEOCI · Agent failure log" (error workflow of every CEOCI agent). A failed scheduled run shows as a red banner on the site |
 | Site API | n8n workflow "CEOCI · Agent site API" (same folder) |
 | Signals | n8n data table `ceoci_goal_signals` |
 | Run log | n8n data table `ceoci_agent_runs` |
