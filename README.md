@@ -34,7 +34,8 @@ This branch (`staging`) holds the site. `main` intentionally has no site, so no 
 
 | Piece | Where |
 |---|---|
-| Agent | n8n workflow "CEOCI · Stated-goal signal agent" (folder `CEOCI_Signals_Jay`), weekdays 6:00 AM ET |
+| Agent (news) | n8n workflow "CEOCI · Stated-goal signal agent" (folder `CEOCI_Signals_Jay`), weekdays 6:00 AM ET |
+| Agent (SEC Form D) | n8n workflow "CEOCI · Form D capital-raise agent" (same folder), weekdays 6:30 AM ET. Reads SEC EDGAR daily indexes for new Form D filings (private capital raises), keeps US/Canada operating companies with a filed revenue band of $5M+ and $1M+ raised, then applies the same ICP |
 | Site API | n8n workflow "CEOCI · Agent site API" (same folder) |
 | Signals | n8n data table `ceoci_goal_signals` |
 | Run log | n8n data table `ceoci_agent_runs` |

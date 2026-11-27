@@ -678,7 +678,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   });
   $("runbtn").addEventListener("click", () => {
     if (state.active) return;
-    panel("run", '<div><p class="big">Scan the news now?</p><p class="sub">Reads the trade feeds and news searches, checks up to 40 new articles with AI and saves every stated goal it finds. Uses OpenAI credit and takes about 3–10 minutes. You can keep working while it runs.</p></div><div class="acts"><button type="button" class="btn primary" id="go">Start news scan</button><button type="button" class="btn ghost" data-close>Cancel</button></div>');
+    panel("run", '<div><p class="big">Scan the news now?</p><p class="sub">Reads the trade feeds and news searches (up to 40 new articles), then new SEC Form D capital raises, and saves every signal it finds. Uses OpenAI credit and takes about 3–10 minutes. You can keep working while it runs.</p></div><div class="acts"><button type="button" class="btn primary" id="go">Start news scan</button><button type="button" class="btn ghost" data-close>Cancel</button></div>');
     $("go").onclick = () => startRun("");
   });
   $("urlbtn").addEventListener("click", () => {
@@ -707,12 +707,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     state.active = { id: String(runId) };
     const before = new Set(state.all.map(r => String(r.id)));
     $("runbtn").disabled = true; $("urlbtn").disabled = true; $("rundot").className = "dot run"; $("runtext").textContent = "Running now…";
-    const what = kind === "urls" ? "Checking your links" : "Scanning the news";
+    const what = kind === "urls" ? "Checking your links" : "Scanning the news and SEC filings";
     const draw = () => {
       if (!state.active) return;
       const s = Math.max(0, Math.round((Date.now() - t0) / 1000));
       const stage = kind === "urls" ? (s < 20 ? "Opening the articles…" : s < 60 ? "AI is reading each article for a stated goal…" : "Checking quotes, looking up the company and CEO…")
-        : (s < 30 ? "Reading news feeds and searches…" : s < 120 ? "Opening new articles and pre-checking them…" : s < 300 ? "AI is reading articles for stated goals…" : "Checking quotes, looking up companies and CEOs, writing copy…");
+        : (s < 30 ? "Reading news feeds and searches…" : s < 120 ? "Opening new articles and pre-checking them…" : s < 300 ? "AI is reading articles for stated goals…" : "Checking quotes, reading SEC filings, looking up companies and CEOs…");
       panel("run", '<div style="flex:1;min-width:0"><p class="big">' + (joined ? "A run is already in progress · " : "") + what + " · run #" + esc(runId) + '</p><p class="sub">' + dur(s) + " elapsed. " + stage + " This updates on its own.</p><div class=\"track\"><i></i></div></div>");
     };
     draw(); const tick = setInterval(draw, 1000);
