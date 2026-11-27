@@ -36,6 +36,7 @@ This branch (`staging`) holds the site. `main` intentionally has no site, so no 
 |---|---|
 | Agent (news) | n8n workflow "CEOCI · Stated-goal signal agent" (folder `CEOCI_Signals_Jay`), weekdays 6:00 AM ET. Reads stated growth goals from news, plus state incentive awards (jobs + investment commitments backed by grants or tax credits) |
 | Agent (SEC Form D) | n8n workflow "CEOCI · Form D capital-raise agent" (same folder), weekdays 6:30 AM ET. Reads SEC EDGAR daily indexes for new Form D filings (private capital raises), keeps US/Canada operating companies with a filed revenue band of $5M+ and $1M+ raised, then applies the same ICP |
+| Agent (franchise FDDs) | n8n workflow "CEOCI · Franchise FDD agent" (same folder), weekdays 7:15 AM ET. Reads new Franchise Disclosure Documents filed with the Minnesota Department of Commerce (CARDS): outlets opened/closed, projected openings, audited franchisor revenue, owner and CEO. Every figure is checked against the PDF text; max 12 FDDs per run |
 | Site API | n8n workflow "CEOCI · Agent site API" (same folder) |
 | Signals | n8n data table `ceoci_goal_signals` |
 | Run log | n8n data table `ceoci_agent_runs` |

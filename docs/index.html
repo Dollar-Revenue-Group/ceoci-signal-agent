@@ -254,6 +254,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       <p class="label">Good to know</p>
       <ul>
         <li><b>Capital raise (Form D)</b> signals come from SEC filings: the company itself filed the revenue band and the amount raised.</li>
+        <li><b>Franchise growth (FDD)</b> signals come from Franchise Disclosure Documents filed with the Minnesota Department of Commerce: outlets opened and closed last year, openings the franchisor projects for next year, and its audited revenue. Every figure is checked against the PDF.</li>
         <li><b>Jobs + investment</b> signals come from state incentive awards (grants, tax credits): the company publicly committed to a number of new jobs and dollars invested, usually by a set year, and many awards pay out only for jobs actually created.</li>
         <li>The agent also runs on its own <b>every weekday at 6:00 AM ET</b> (news) and <b>6:30 AM ET</b> (SEC Form D). Those runs add signals here but don't show in the run status.</li>
         <li><b>Review</b> means a person must check one thing first; the reason is listed on the signal.</li>
@@ -280,8 +281,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
   state.filter = store.get("drg.ceoci.filter") || "All";
 
-  const GOALS = { G1: "Locations", G2: "Revenue", G3: "Headcount", G4: "New markets", G5: "Acquisitions", G6: "Exit / IPO / valuation", G7: "Margin", G8: "Capital raise (Form D)", G9: "Jobs + investment commitment" };
-  const goalLabel = t => { const m = String(t || "").match(/^G(\d)/); return m ? GOALS["G" + m[1]] || t : (t || ""); };
+  const GOALS = { G1: "Locations", G2: "Revenue", G3: "Headcount", G4: "New markets", G5: "Acquisitions", G6: "Exit / IPO / valuation", G7: "Margin", G8: "Capital raise (Form D)", G9: "Jobs + investment commitment", G10: "Franchise growth (FDD)" };
+  const goalLabel = t => { const m = String(t || "").match(/^G(\d+)/); return m ? GOALS["G" + m[1]] || t : (t || ""); };
   const OWN = { founder_or_family_owned: "Founder / family owned", private_equity_backed: "PE-backed", vc_backed: "VC-backed", public: "Public", subsidiary: "Subsidiary", non_profit: "Non-profit", unknown: "Unknown" };
   const ownLabel = o => OWN[o] || String(o || "").replace(/_/g, " ");
   const isUrl = u => /^https?:\/\//i.test(String(u || ""));
@@ -363,7 +364,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     const m = (rv.low + rv.high) / 2;
     return m >= lo && m <= hi;
   }
-  const BASIS = { sec_filing: "SEC Form D (filed by the company)", company_stated: "Company-stated", press_reported: "Reported in press", third_party_estimate: "Third-party estimate" };
+  const BASIS = { audited_fdd: "Audited, in the company's FDD", fdd_filing: "From the company's FDD", sec_filing: "SEC Form D (filed by the company)", company_stated: "Company-stated", press_reported: "Reported in press", third_party_estimate: "Third-party estimate" };
   function hostName(u) { const m = String(u || "").match(/^https?:\/\/([^\/?#]+)/i); return m ? m[1].replace(/^www\./, "") : u; }
   const srcLink = (u, label) => isUrl(u) ? '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(label || hostName(u)) + " ↗</a>" : "";
   function money(x) { return x >= 1000 ? "$" + (Math.round(x / 100) / 10) + "B" : x < 10 ? "$" + (Math.round(x * 10) / 10) + "M" : "$" + Math.round(x) + "M"; }
@@ -439,7 +440,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     const reasons = String(r.reasons || "").split(" | ").map(x => x.trim()).filter(Boolean);
     const whyHead = r.status === "Qualified" ? "Why it qualified" : r.status === "Review" ? "Check before sending" : "Why it was rejected";
     const whyBody = reasons.length ? "<ul>" + reasons.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>"
-      : (r.status === "Qualified" ? (r.quote_type === "sec_filing" ? " The company filed this raise with the SEC itself, the filing is recent, and the company fits the ICP (private, US/Canada, 50+ employees, revenue of $10M–$200M)." : " Quote verified word for word in the article, deadline is ahead, and the company fits the ICP (private, US/Canada, 50+ employees, sourced revenue of $10M–$200M).") : "");
+      : (r.status === "Qualified" ? (r.quote_type === "fdd_filing" ? " Figures come from the franchisor's own disclosure document filed with Minnesota, checked against the PDF, and the company fits the ICP (private, US, franchisor revenue of $10M–$200M)." : r.quote_type === "sec_filing" ? " The company filed this raise with the SEC itself, the filing is recent, and the company fits the ICP (private, US/Canada, 50+ employees, revenue of $10M–$200M)." : " Quote verified word for word in the article, deadline is ahead, and the company fits the ICP (private, US/Canada, 50+ employees, sourced revenue of $10M–$200M).") : "");
     const metaBits = [r.company_domain, r.hq_country, r.employees ? Number(r.employees).toLocaleString() + " employees" : "", r.ownership ? ownLabel(r.ownership) : ""].filter(Boolean);
     let h = '<div class="detail"><div class="dh"><div class="pills"><span class="pill ' + esc(r.status) + '">' + esc(r.status) + "</span>" + (s >= 80 && r.status === "Qualified" ? '<span class="pill Hot">Hot</span>' : "") + '<span class="pill type">' + esc(goalLabel(r.goal_type)) + "</span>" + meter(s).replace('">', '">Score ') + "</div><h2>" + esc(r.company) + '</h2><p class="meta">' + esc(metaBits.join(" · ")) + "</p></div>";
     h += '<div class="why ' + esc(r.status) + '"><b>' + whyHead + ":</b>" + whyBody + "</div>";
@@ -450,7 +451,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       h += '<div class="goalcard"><p class="label">Capital raise · SEC Form D</p><p class="g">' + esc(mm(fd.sold)) + ' raised' + (fd.offered ? ' of ' + esc(mm(fd.offered)) + ' offered' : '') + '</p><div class="nums"><span>Filed<b>' + esc(fmtDate(fd.filed)) + '</b></span>' + (fd.first_sale ? '<span>First sale<b>' + esc(fmtDate(fd.first_sale)) + '</b></span>' : '') + (fd.investors ? '<span>Investors<b>' + esc(fd.investors) + '</b></span>' : '') + '<span>Industry<b>' + esc(fd.industry || "") + '</b></span></div>' + (r.challenge_line ? '<p class="chal">' + esc(r.challenge_line) + '</p>' : '') + (fd.people ? '<p class="fnote" style="color:#CFCFCA">Officers on the filing: ' + esc(fd.people) + '</p>' : '') + '</div>';
     }
     const cm = (pace(r) || {}).commitment;
-    if (!fd)
+    const fdd = (pace(r) || {}).fdd;
+    if (fdd) {
+      const n = x => x === null || x === undefined ? "" : Number(x).toLocaleString();
+      const sp = (k, v) => v === "" ? "" : "<span>" + esc(k) + "<b>" + esc(v) + "</b></span>";
+      h += '<div class="goalcard"><p class="label">Franchise growth · FDD filed in Minnesota ' + esc(fmtDate(fdd.received)) + '</p><p class="g">' + esc(fdd.projected !== null && fdd.projected !== undefined ? n(fdd.projected) + " new franchised outlets projected for " + fdd.next_year : r.goal_phrase) + '</p><div class="nums">' +
+        sp("Outlets end " + (fdd.fiscal_year || ""), n(fdd.franchised_end)) + sp("Opened " + (fdd.fiscal_year || ""), n(fdd.opened)) + sp("Closed " + (fdd.fiscal_year || ""), n(fdd.closed)) + sp("Signed, not open", n(fdd.signed_not_opened)) +
+        '</div>' + (r.challenge_line ? '<p class="chal">' + esc(r.challenge_line) + '</p>' : '') + (fdd.owner ? '<p class="fnote" style="color:#CFCFCA">Ownership (Item 1): ' + esc(fdd.owner) + '</p>' : '') + '</div>';
+    }
+    if (!fd && !fdd)
     h += '<div class="goalcard"><p class="label">' + (cm ? 'Public commitment · state incentive award' : 'Stated goal') + '</p><p class="g">' + esc(r.goal_phrase) + '</p><div class="nums">' +
       (r.baseline ? "<span>From<b>" + esc(r.baseline) + " " + esc(r.unit) + "</b></span>" : "") +
       (r.target ? "<span>" + (r.baseline ? "To" : "Target") + "<b>" + esc(r.target) + " " + esc(r.unit) + "</b></span>" : "") +
@@ -461,9 +470,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     h += finBlock(r);
 
     if (r.exact_quote) {
-      const qlabel = r.quote_type === "direct_quote" ? "Direct quote" : r.quote_type === "sec_filing" ? "SEC filing" : "As reported by " + (r.publication || "the article");
+      const qlabel = r.quote_type === "direct_quote" ? "Direct quote" : r.quote_type === "fdd_filing" ? "Franchise Disclosure Document" : r.quote_type === "sec_filing" ? "SEC filing" : "As reported by " + (r.publication || "the article");
       const who = [r.speaker_name, r.speaker_title].filter(Boolean).join(", ");
-      h += '<p class="quote"><span class="label">Evidence · ' + esc(qlabel) + "</span>“" + esc(r.exact_quote) + "”" + (who ? '<span class="who">' + (r.quote_type === "sec_filing" ? "Officer on the filing: " : "Speaker: ") + esc(who) + (r.speaker_is_ceo === false || r.speaker_is_ceo === "false" ? " (not the CEO)" : "") + "</span>" : "") + "</p>";
+      h += '<p class="quote"><span class="label">Evidence · ' + esc(qlabel) + "</span>“" + esc(r.exact_quote) + "”" + (who ? '<span class="who">' + (r.quote_type === "sec_filing" ? "Officer on the filing: " : r.quote_type === "fdd_filing" ? "Leader named in Item 2: " : "Speaker: ") + esc(who) + (r.speaker_is_ceo === false || r.speaker_is_ceo === "false" ? " (not the CEO)" : "") + "</span>" : "") + "</p>";
     }
 
     const ceo = [r.ceo_name, r.ceo_title].filter(Boolean).join(", ");
@@ -484,7 +493,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       h += '<div class="assets"><p class="label">Personalized assets</p><p class="fnote">Built from this signal\'s checked facts only. Review before sending.</p><div class="row"><button type="button" class="btn dl" data-asset="pptx">Download 3-slide PPT</button>' + (pc.pace_short ? '<button type="button" class="btn dl ghostdl" data-asset="png">Download image card (PNG)</button>' : '<span class="fnote">The image card needs a starting number and a deadline in the goal.</span>') + '</div>' + (pc.pace_short ? '<canvas id="card" width="1080" height="1080" aria-label="Image card preview"></canvas>' : "") + "</div>";
     }
     const links = [];
-    if (isUrl(r.source_url)) links.push('<a href="' + esc(r.source_url) + '" target="_blank" rel="noopener">' + (r.quote_type === "sec_filing" ? "Open the SEC filing" : "Open the article") + ' ↗</a>');
+    if (isUrl(r.source_url)) links.push('<a href="' + esc(r.source_url) + '" target="_blank" rel="noopener">' + (r.quote_type === "sec_filing" ? "Open the SEC filing" : r.quote_type === "fdd_filing" ? "Open the FDD (PDF)" : "Open the article") + ' ↗</a>');
     if (li) links.push('<a href="' + esc(r.ceo_linkedin) + '" target="_blank" rel="noopener">CEO on LinkedIn ↗</a>');
     if (r.company_domain) links.push('<a href="https://' + esc(String(r.company_domain).replace(/^https?:\/\//, "")) + '" target="_blank" rel="noopener">Company site ↗</a>');
     if (links.length) h += '<div class="links">' + links.join("") + "</div>";
@@ -505,12 +514,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     G6: "CCI clients have had 150+ exits worth $30.1B combined.",
     G7: "Clients with a CCI coach for 2+ years average 37.5% EBITDA growth a year.",
     G8: "CCI clients have had 150+ exits worth $30.1B combined.",
-    G9: "TaskUs fixed hiring, training and accountability with a CCI coach on the way to $3B."
+    G9: "TaskUs fixed hiring, training and accountability with a CCI coach on the way to $3B.",
+    G10: "Under Canvas built a repeatable site model with a CCI coach and exited at 32x EBITDA."
   };
-  const proofFor = r => { const m = String(r.goal_type || "").match(/^G(\d)/); return PROOF[m ? "G" + m[1] : "G2"] || PROOF.G2; };
+  const proofFor = r => { const m = String(r.goal_type || "").match(/^G(\d+)/); return PROOF[m ? "G" + m[1] : "G2"] || PROOF.G2; };
   function shortGoal(r) {
     const fd = (pace(r) || {}).form_d;
     if (fd && fd.sold) return "$" + (Math.round(fd.sold / 1e5) / 10) + "M raised" + (fd.first_sale ? ", " + fmtDate(fd.first_sale) : "");
+    const fdq = (pace(r) || {}).fdd;
+    if (fdq && fdq.projected) return Number(fdq.projected).toLocaleString() + " new outlets projected for " + fdq.next_year;
     const cm = (pace(r) || {}).commitment;
     if (cm && cm.jobs) return Number(cm.jobs).toLocaleString() + " new jobs" + (cm.investment_label ? " + " + cm.investment_label + " investment" : "") + (r.deadline ? " by " + r.deadline : "");
     const t = String(r.target || "").trim(), u = String(r.unit || "").trim(), d = String(r.deadline || "").trim();
@@ -565,7 +577,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
     const foot = (s, dark) => s.addText((r.ceo_name ? "Prepared for " + r.ceo_name + ", " : "Prepared for ") + r.company + "  ·  CEO Coaching International", { x: 0.6, y: 6.85, w: 12, h: 0.4, fontFace: F, fontSize: 11, color: dark ? "9A9A94" : GREY });
     // 1. The goal
     let s = p.addSlide(); s.background = { color: "FFFFFF" };
-    s.addText(/^G8/.test(r.goal_type || "") ? "YOUR RAISE" : /^G9/.test(r.goal_type || "") ? "YOUR COMMITMENT" : "YOUR GOAL", { x: 0.6, y: 0.5, w: 12, h: 0.4, fontFace: F, fontSize: 14, bold: true, color: GREY, charSpacing: 4 });
+    s.addText(/^G8/.test(r.goal_type || "") ? "YOUR RAISE" : /^G9/.test(r.goal_type || "") ? "YOUR COMMITMENT" : /^G10/.test(r.goal_type || "") ? "YOUR FDD" : "YOUR GOAL", { x: 0.6, y: 0.5, w: 12, h: 0.4, fontFace: F, fontSize: 14, bold: true, color: GREY, charSpacing: 4 });
     s.addText(shortGoal(r), { x: 0.6, y: 1.0, w: 12.1, h: 1.9, fontFace: F, fontSize: 48, bold: true, color: INK, valign: "top", fit: "shrink" });
     if (r.exact_quote) s.addText("“" + r.exact_quote + "”", { x: 0.6, y: 3.3, w: 12.1, h: 2.2, fontFace: F, fontSize: 20, italic: true, color: "2A2A2A", valign: "top", fit: "shrink" });
     s.addText(sourceLine(r) + (isUrl(r.source_url) ? "  ·  " + hostName(r.source_url) : ""), { x: 0.6, y: 5.8, w: 12, h: 0.4, fontFace: F, fontSize: 12, color: GREY });
@@ -580,9 +592,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
       if (fdx.first_sale) { boxes.push(["First sale", fmtDate(fdx.first_sale)]); const mo = Math.max(0, Math.round((Date.now() - Date.parse(fdx.first_sale)) / (30.44 * 864e5))); boxes.push(["Months since", String(mo)]); }
       if (fdx.investors) boxes.push(["Investors", String(fdx.investors)]);
     }
+    const fdx2 = pc.fdd;
+    if (fdx2) { const nn = x => Number(x).toLocaleString(); if (fdx2.projected !== null && fdx2.projected !== undefined) boxes.push(["Projected " + fdx2.next_year, nn(fdx2.projected)]); if (fdx2.opened !== null && fdx2.opened !== undefined) boxes.push(["Opened " + fdx2.fiscal_year, nn(fdx2.opened)]); if (fdx2.closed !== null && fdx2.closed !== undefined) boxes.push(["Closed " + fdx2.fiscal_year, nn(fdx2.closed)]); if (fdx2.signed_not_opened) boxes.push(["Signed, not open", nn(fdx2.signed_not_opened)]); }
     const cmx = pc.commitment;
     if (cmx) { if (cmx.jobs) boxes.push(["Jobs promised", Number(cmx.jobs).toLocaleString()]); if (cmx.investment_label) boxes.push(["Investment", cmx.investment_label]); }
-    if (r.baseline !== "" && r.target !== "" && !isNaN(Number(r.target) - Number(r.baseline)) && !/^G2|^G7/.test(r.goal_type || "")) boxes.push(["Still to add", (Number(r.target) - Number(r.baseline)).toLocaleString() + " " + r.unit]);
+    if (r.baseline !== "" && r.target !== "" && !isNaN(Number(r.target) - Number(r.baseline)) && !/^G2|^G7|^G10/.test(r.goal_type || "")) boxes.push(["Still to add", (Number(r.target) - Number(r.baseline)).toLocaleString() + " " + r.unit]);
     if (pc.months_left) boxes.push(["Time left", pc.months_left + " months"]);
     if (pc.pace_short) boxes.push(["Pace needed", pc.pct_needed != null ? pc.pct_needed + "% a year" : pc.pace_short]);
     if (pc.hist_per_month != null && pc.hist_months) boxes.push(["Your recent pace", (Math.round(pc.hist_per_month * 10) / 10) + " " + r.unit + " a month"]);
